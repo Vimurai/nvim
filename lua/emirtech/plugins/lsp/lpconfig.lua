@@ -45,10 +45,6 @@ return {
 				keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", opts)
 				opts.desc = "Show line diagnostics"
 				keymap.set("n", "<leader>d", vim.diagnostic.open_float, opts)
-				opts.desc = "Go to previous diagnostic"
-				keymap.set("n", "[d", vim.diagnostic.goto_prev, opts)
-				opts.desc = "Go to next diagnostic"
-				keymap.set("n", "]d", vim.diagnostic.goto_next, opts)
 				opts.desc = "Show documentation for what is under cursor"
 				keymap.set("n", "K", vim.lsp.buf.hover, opts)
 				opts.desc = "Restart LSP"
@@ -59,11 +55,25 @@ return {
 		-- Autocompletion support
 		local capabilities = cmp_nvim_lsp.default_capabilities()
 
+		-- Enable snippet support
+		capabilities.textDocument.completion.completionItem = {
+			snippetSupport = true,
+		}
+
+		-- Set utf16
+		capabilities.offsetEncoding = { "utf-16" }
+
 		-- Diagnostic symbols in the sign column
 		local signs = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " }
+
 		for type, icon in pairs(signs) do
-			local hl = "DiagnosticSign" .. type
-			vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
+			local name = "DiagnosticSign" .. type
+			vim.api.nvim_set_hl(0, name, { default = true, link = "Diagnostic" .. type })
+			vim.diagnostic.config({
+				signs = {
+					[vim.diagnostic.severity[type:upper()]] = { text = icon, texthl = name, numhl = "" },
+				},
+			})
 		end
 
 		mason_lspconfig.setup_handlers({

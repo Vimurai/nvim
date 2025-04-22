@@ -5,6 +5,7 @@ vim.cmd("highlight EndOfBuffer guibg=NONE ctermbg=NONE")
 vim.cmd("highlight SignColumn guibg=NONE ctermbg=NONE")
 vim.cmd("highlight LineNr guibg=NONE ctermbg=NONE")
 vim.cmd("highlight CursorLineNr guibg=NONE ctermbg=NONE")
+vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
 local opt = vim.opt
 
@@ -23,11 +24,11 @@ opt.wrap = true
 opt.ignorecase = true
 opt.smartcase = true
 
-opt.cursorline = true
+opt.cursorline = false
 
 -- turn on termugicolors for tokyonight colorscheme to work
 -- (have to use iterm2 or any other true color terminal
-opt.termguicolors = true
+opt.termguicolors = false
 opt.background = "dark"
 opt.signcolumn = "yes"
 
