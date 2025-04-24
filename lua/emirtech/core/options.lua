@@ -28,7 +28,7 @@ opt.cursorline = false
 
 -- turn on termugicolors for tokyonight colorscheme to work
 -- (have to use iterm2 or any other true color terminal
-opt.termguicolors = false
+opt.termguicolors = true
 opt.background = "dark"
 opt.signcolumn = "yes"
 
