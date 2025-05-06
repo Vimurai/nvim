@@ -8,7 +8,6 @@ vim.cmd("highlight CursorLineNr guibg=NONE ctermbg=NONE")
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
 local opt = vim.opt
-
 opt.relativenumber = true
 opt.number = true
 
