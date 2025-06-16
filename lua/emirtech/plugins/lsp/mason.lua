@@ -1,7 +1,7 @@
 return {
-	"williamboman/mason.nvim",
+	"mason-org/mason.nvim",
 	dependencies = {
-		"williamboman/mason-lspconfig.nvim",
+		"mason-org/mason-lspconfig.nvim",
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
 	},
 	config = function()
@@ -25,8 +25,9 @@ return {
 		})
 
 		mason_lspconfig.setup({
-			automatic_installation = {},
+			automatic_enable = false, -- safer default
 			-- list of servers for mason to install
+			-- if you want to see all of the servers run :Mason
 			ensure_installed = {
 				"ts_ls",
 				"html",
@@ -38,20 +39,26 @@ return {
 				"emmet_ls",
 				"prismals",
 				"pyright",
-				"volar", -- Vue.js LSP
-				"omnisharp", -- c# LSP
+				"vue_ls", -- Vue.js LSP
+				"eslint",
+				"csharp_ls", -- c# LSP
 			},
 		})
 
 		mason_tool_installer.setup({
+			auto_update = true,
 			ensure_installed = {
 				"prettier", -- prettier formatter
 				"stylua", -- lua formatter
 				"isort", -- python formatter
-				"black", -- python formatter
 				"pylint",
 				"eslint_d",
-				-- "sonarlint-language-server", -- C# formatter
+				"shfmt", -- shell script formatter
+				"markdownlint", -- markdown linter
+				"jsonlint", -- for JSON files
+				"clang-format", -- if working with C/C++
+				"csharpier", -- C# formatter
+				"eslint_d", -- JavaScript/TypeScript linter
 			},
 		})
 	end,

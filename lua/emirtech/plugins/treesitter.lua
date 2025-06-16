@@ -20,10 +20,13 @@ return {
 			autotag = {
 				enable = true,
 			},
-			auto_install = true,
-			sync_install = false,
-			modules = {},
-			ignore_install = { "haskell" },
+			sync_install = false, -- do not install parsers synchronously
+
+			ignore_install = { -- ignore these parsers{
+			},
+			auto_install = true, -- automatically install missing parsers when entering buffer
+			modules = {}, -- disable modules that are not needed
+
 			-- ensure these language parsers are installed
 			ensure_installed = {
 				"json",

@@ -3,6 +3,7 @@ return {
 	lazy = false,
 	priority = 1000,
 	opts = {
+		input = { enabled = true }, -- enable the input window
 		explorer = {
 			enabled = true,
 		},
@@ -52,6 +53,7 @@ return {
 		-- Documentation for the picker
 		-- https://github.com/folke/snacks.nvim/blob/main/docs/picker.md
 		picker = {
+			hidden = true, -- show hidden files in the pickers
 			-- My ~/github/dotfiles-latest/neovim/lazyvim/lua/config/keymaps.lua
 			-- file was always showing at the top, I needed a way to decrease its
 			-- score, in frecency you could use :FrecencyDelete to delete a file
@@ -376,6 +378,7 @@ return {
 			desc = "Goto T[y]pe Definition",
 		},
 	},
+
 	init = function()
 		vim.api.nvim_create_autocmd("User", {
 			pattern = "VeryLazy",
@@ -388,6 +391,10 @@ return {
 					Snacks.debug.backtrace()
 				end
 				vim.print = _G.dd -- Override print to use snacks for `:=` command
+
+				-- ✅ Set Neovim UI to use Snacks (AFTER snacks is loaded)
+				vim.ui.input = Snacks.input
+				vim.ui.select = Snacks.picker.select
 
 				-- Create some toggle mappings
 				Snacks.toggle.option("spell", { name = "Spelling" }):map("<leader>us")

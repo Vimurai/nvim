@@ -43,6 +43,51 @@
 -- 		vim.cmd("colorscheme tokyonight")
 -- 	end,
 -- }
+
+-- return {
+-- 	"ellisonleao/gruvbox.nvim",
+-- 	priority = 1000,
+-- 	config = function()
+-- 		require("gruvbox").setup({
+-- 			transparent_mode = true,
+-- 			italic = {
+-- 				strings = false,
+-- 				comments = true,
+-- 				operators = false,
+-- 				folds = true,
+-- 			},
+-- 		})
+-- 		vim.cmd("colorscheme gruvbox")
+-- 	end,
+-- }
+
+-- return {
+-- 	"rose-pine/neovim",
+-- 	name = "rose-pine",
+-- 	priority = 1000,
+--
+-- 	config = function()
+-- 		require("rose-pine").setup({
+-- 			variant = "moon", -- main, moon, dawn
+-- 			dark_variant = "main",
+-- 			disable_background = true,
+-- 			disable_float_background = true,
+-- 		})
+--
+-- 		vim.cmd("colorscheme rose-pine")
+--
+-- 		-- ✨ Force transparent background for more highlight groups
+-- 		vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
+-- 		vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
+-- 		vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
+-- 		vim.api.nvim_set_hl(0, "FloatBorder", { bg = "none" })
+-- 		vim.api.nvim_set_hl(0, "Pmenu", { bg = "none" }) -- popup menu (e.g., completion)
+-- 		vim.api.nvim_set_hl(0, "PmenuSel", { bg = "none" }) -- selected item in popup
+-- 		vim.api.nvim_set_hl(0, "StatusLine", { bg = "none" }) -- statusline
+-- 		vim.api.nvim_set_hl(0, "VertSplit", { bg = "none" }) -- split border
+-- 	end,
+-- }
+
 return {
 	"catppuccin/nvim",
 	name = "catppuccin",

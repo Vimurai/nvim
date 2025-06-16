@@ -1,10 +1,13 @@
 return {
-	"norcalli/nvim-colorizer.lua",
+	"NvChad/nvim-colorizer.lua",
 	config = function()
 		require("colorizer").setup({
-			"*",
-			"!vim",
-			"!help",
-		}, { mode = "background" })
+			filetypes = { "css", "scss", "vue", "javascript", "typescript", "lua" },
+			user_default_options = {
+				RGB = true,
+				names = true,
+				tailwind = true,
+			},
+		})
 	end,
 }

@@ -10,8 +10,11 @@ return {
 				typescript = { "prettier" },
 				javascriptreact = { "prettier" },
 				typescriptreact = { "prettier" },
-				svelte = { "prettier" },
+				svelte = { "eslint_d", "prettier" },
 				css = { "prettier" },
+				scss = { "prettier" },
+
+				less = { "prettier" },
 				html = { "prettier" },
 				json = { "prettier" },
 				yaml = { "prettier" },
@@ -27,6 +30,25 @@ return {
 				lsp_fallback = true,
 				async = false,
 				timeout_ms = 1000,
+			},
+			formatters = {
+				csharpier = {
+					command = vim.fn.expand("~/.dotnet/tools/csharpier"),
+					args = { "format", "$FILENAME" },
+					stdin = false,
+					require_cwd = false,
+				},
+				prettier = {
+					command = "./node_modules/.bin/prettier", -- ✅ Use local Prettier directly
+					args = {
+						"--config",
+						vim.fn.getcwd() .. "/.prettierrc.json", -- ✅ Force config location
+						"--stdin-filepath",
+						"$FILENAME",
+					},
+					stdin = true,
+					require_cwd = true,
+				},
 			},
 		})
 
