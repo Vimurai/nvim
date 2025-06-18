@@ -33,6 +33,8 @@ return {
 
 		local function on_attach(client, bufnr)
 			client.server_capabilities.documentFormattingProvider = false
+			client.server_capabilities.documentRangeFormattingProvider = false
+
 			local map = vim.keymap.set
 			local opts = { buffer = bufnr, silent = true }
 

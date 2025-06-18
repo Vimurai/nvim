@@ -34,8 +34,9 @@ return {
 			formatters = {
 				csharpier = {
 					command = vim.fn.expand("~/.dotnet/tools/csharpier"),
-					args = { "format", "$FILENAME" },
-					stdin = false,
+					args = { "--write-stdout", "$FILENAME" },
+					stdin = true,
+					to_tempfile = false,
 					require_cwd = false,
 				},
 				prettier = {
