@@ -1,10 +1,16 @@
 return {
 	"echasnovski/mini.animate",
 	config = function()
-		require("mini.animate").setup({
-			scroll = { enable = true },
+		local animate = require("mini.animate")
+
+		animate.setup({
 			cursor = { enable = true },
+			scroll = {
+				enable = true,
+			},
 			resize = { enable = false },
+			open = { enable = false },
+			close = { enable = false },
 		})
 	end,
 }
