@@ -27,17 +27,15 @@ return {
 				cs = { "csharpier" }, -- Added C# formatting support
 			},
 			format_on_save = {
-				lsp_fallback = true,
+				lsp_fallback = false,
 				async = false,
 				timeout_ms = 1000,
 			},
 			formatters = {
 				csharpier = {
 					command = vim.fn.expand("~/.dotnet/tools/csharpier"),
-					args = { "--write-stdout", "$FILENAME" },
-					stdin = true,
-					to_tempfile = false,
-					require_cwd = false,
+					args = { "format", "--write-stdout" },
+					to_stdin = true,
 				},
 				prettier = {
 					command = "./node_modules/.bin/prettier", -- ✅ Use local Prettier directly
