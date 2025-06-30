@@ -13,7 +13,6 @@ return {
 				svelte = { "eslint_d", "prettier" },
 				css = { "prettier" },
 				scss = { "prettier" },
-
 				less = { "prettier" },
 				html = { "prettier" },
 				json = { "prettier" },
@@ -38,15 +37,16 @@ return {
 					to_stdin = true,
 				},
 				prettier = {
-					command = "./node_modules/.bin/prettier", -- ✅ Use local Prettier directly
+					command = vim.fn.executable("./node_modules/.bin/prettier") == 1 and "./node_modules/.bin/prettier"
+						or "prettier",
 					args = {
 						"--config",
-						vim.fn.getcwd() .. "/.prettierrc.json", -- ✅ Force config location
+						vim.fn.getcwd() .. "/.prettierrc.json",
 						"--stdin-filepath",
 						"$FILENAME",
 					},
 					stdin = true,
-					require_cwd = true,
+					require_cwd = false,
 				},
 			},
 		})

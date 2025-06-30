@@ -42,10 +42,6 @@ return {
 			map("n", "<leader>rn", vim.lsp.buf.rename, opts)
 			map("n", "<leader>rs", ":LspRestart<CR>", opts)
 			map("n", "<leader>d", vim.diagnostic.open_float, opts)
-
-			if client.supports_method("textDocument/inlayHint") then
-				vim.lsp.inlay_hint.enable(bufnr, true)
-			end
 		end
 
 		-- Vue LS (template + style support)

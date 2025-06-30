@@ -20,7 +20,7 @@ return {
 				{
 					type = "coreclr",
 					name = "Launch C# (netcoredbg)",
-					request = "launch",
+					request = "attach",
 					cwd = home .. "/Documents/development/Repos/test",
 					program = function()
 						local proj = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
@@ -73,6 +73,13 @@ return {
 			map("n", "<leader>do", dap.step_out, { desc = "DAP Step Out" })
 			map("n", "<leader>dr", dap.repl.open, { desc = "DAP Open REPL" })
 			map("n", "<leader>dl", dap.run_last, { desc = "DAP Run Last" })
+			map("n", "<leader>dt", function()
+				if require("dapui").is_open() then
+					require("dapui").close()
+				else
+					require("dapui").open()
+				end
+			end, { desc = "DAP Toggle UI" })
 		end,
 	},
 

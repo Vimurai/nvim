@@ -4,6 +4,8 @@ return {
 	priority = 1000,
 	opts = {
 		input = { enabled = true }, -- enable the input window
+		spelling = { enabled = true }, -- enable the spelling window
+		indent = { enabled = true }, -- enable the indent window
 		explorer = {
 			enabled = true,
 		},
@@ -409,7 +411,7 @@ return {
 				Snacks.toggle
 					.option("background", { off = "light", on = "dark", name = "Dark Background" })
 					:map("<leader>ub")
-				Snacks.toggle.inlay_hints():map("<leader>uh")
+				-- Snacks.toggle.inlay_hints():map("<leader>uh")
 				Snacks.toggle.indent():map("<leader>ug")
 				Snacks.toggle.dim():map("<leader>uD")
 			end,
