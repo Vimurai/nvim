@@ -52,6 +52,7 @@ return {
 				"vimdoc",
 				"c",
 				"c_sharp",
+				"razor",
 			},
 			incremental_selection = {
 				enable = true,

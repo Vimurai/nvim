@@ -4,9 +4,9 @@ return {
 		local animate = require("mini.animate")
 
 		animate.setup({
-			cursor = { enable = true },
+			cursor = { enable = false },
 			scroll = {
-				enable = true,
+				enable = false,
 			},
 			resize = { enable = false },
 			open = { enable = false },

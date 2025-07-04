@@ -12,21 +12,39 @@ return {
 		event = "VeryLazy",
 		config = function()
 			local dap = require("dap")
+			local home = os.getenv("HOME")
 			-- setup netcoredbg adapter
 			require("netcoredbg-macOS-arm64").setup(dap)
 
 			-- C#/.NET
+			dap.adapters.coreclr = {
+				type = "executable",
+				command = "/usr/local/bin/netcoredbg", -- change path if needed
+				args = { "--interpreter=vscode" },
+			}
+
 			dap.configurations.cs = {
+				-- 🟢 LAUNCH config (for debugging after build)
 				{
 					type = "coreclr",
-					name = "Launch C# (netcoredbg)",
-					request = "attach",
-					cwd = home .. "/Documents/development/Repos/test",
+					name = "Launch .NET Project",
+					request = "launch",
+					cwd = vim.fn.getcwd(),
 					program = function()
-						local proj = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
-						return vim.fn.getcwd() .. "/bin/Debug/net9.0/" .. proj .. ".dll"
+						local projectName = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+						return vim.fn.getcwd() .. "/bin/Debug/net9.0/" .. projectName .. ".dll"
 					end,
 					stopAtEntry = true,
+				},
+
+				-- 🟡 ATTACH config (for attaching to running process)
+				{
+					type = "coreclr",
+					name = "Attach to .NET Process",
+					request = "attach",
+					processId = require("dap.utils").pick_process,
+					cwd = vim.fn.getcwd(),
+					stopAtEntry = false,
 				},
 			}
 

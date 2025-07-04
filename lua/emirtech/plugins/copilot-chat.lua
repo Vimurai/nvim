@@ -14,9 +14,17 @@ return {
 					return select_module.visual(selected_text)
 				end,
 			},
+			MakeComponent = {
+				prompt = "Please create a new component based on the provided code context.",
+				selection = function(selected_text)
+					local select_module = require("CopilotChat.select")
+					return select_module.visual(selected_text)
+				end,
+			},
 		},
 	},
 	keys = {
+		{ "<leader>zM", "<cmd>CopilotChatMakeComponent<CR>", mode = "v", desc = "Make a new component" },
 		{ "<leader>zn", "<cmd>CopilotChatRename<CR>", mode = "v", desc = "Rename the variable or function" },
 		{ "<leader>zc", "<cmd>CopilotChat<CR>", mode = "n", desc = "Chat with Copilot" },
 		{ "<leader>ze", "<cmd>CopilotChatExplain<CR>", mode = "v", desc = "Explain Code" },

@@ -93,7 +93,7 @@ return {
 		lspconfig.csharp_ls.setup({
 			on_attach = on_attach,
 			capabilities = capabilities,
-			root_dir = lspconfig.util.root_pattern("*.sln", "*.csproj", ".git"),
+			root_dir = lspconfig.util.root_pattern("*.sln", "*.csproj", ".git", ".razor"),
 		})
 
 		-- HTML
