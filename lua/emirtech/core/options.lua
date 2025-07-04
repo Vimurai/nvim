@@ -76,6 +76,19 @@ opt.confirm = true
 opt.splitright = true -- split vertical window to the right
 opt.splitbelow = true -- split horizontal window to the bottom
 
+--Configure hidden swap path
+vim.opt.swapfile = true
+vim.opt.directory = "/tmp//"
+
+--Add a LazyVim-safe wrapper to ignore swap errors in snacks.nvim (or other plugins)
+vim.api.nvim_create_autocmd("BufReadPre", {
+	callback = function(args)
+		if vim.fn.getfsize(args.file) < 0 then
+			vim.cmd("silent! bwipeout!")
+		end
+	end,
+})
+
 -- Highlight when yanking (copying) text
 --  Try it with `yap` in normal mode
 --  See `:help vim.highlight.on_yank()`
