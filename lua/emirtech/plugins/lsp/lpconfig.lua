@@ -3,7 +3,6 @@ return {
 	event = { "BufReadPre", "BufNewFile" },
 	dependencies = {
 		"mason-org/mason.nvim",
-		"mason-org/mason-lspconfig.nvim",
 		"hrsh7th/cmp-nvim-lsp",
 		{ "antosha417/nvim-lsp-file-operations", config = true },
 		{ "folke/neodev.nvim", opts = {} },
@@ -11,12 +10,9 @@ return {
 	},
 	config = function()
 		local lspconfig = require("lspconfig")
-		local mason_registry = require("mason-registry")
-		local cmp_nvim_lsp = require("cmp_nvim_lsp")
-
-		local capabilities = cmp_nvim_lsp.default_capabilities()
-		capabilities.textDocument.completion.completionItem.snippetSupport = true
-		capabilities.offsetEncoding = { "utf-16" }
+		local cap = require("cmp_nvim_lsp").default_capabilities()
+		cap.textDocument.completion.completionItem.snippetSupport = true
+		cap.offsetEncoding = { "utf-16" }
 
 		vim.diagnostic.config({
 			virtual_text = true,
@@ -44,82 +40,107 @@ return {
 			map("n", "<leader>d", vim.diagnostic.open_float, opts)
 		end
 
-		-- Vue LS (template + style support)
-		vim.lsp.config("vue_ls", {
-			-- add filetypes for typescript, javascript and vue
-			filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
-			init_options = {
-				vue = {
-					-- disable hybrid mode
-					hybridMode = false,
+		local vue_language_server_path = vim.fn.stdpath("data")
+			.. "/mason/packages/vue-language-server/node_modules/@vue/language-server"
+		-- local vue_language_server_path = "/path/to/@vue/language-server"
+		local vue_plugin = {
+			name = "@vue/typescript-plugin",
+			location = vue_language_server_path,
+			languages = { "vue" },
+			configNamespace = "typescript",
+		}
+		local vtsls_config = {
+			settings = {
+				vtsls = {
+					tsserver = {
+						globalPlugins = {
+							vue_plugin,
+						},
+					},
 				},
 			},
-		}, {
-			priority = 10, -- ensure this is higher than tailwind, html, etc.
-		})
-		vim.lsp.enable("vue_ls")
+			filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
+		}
 
-		-- ESLINT
-		lspconfig.eslint.setup({
+		local vue_ls_config = {
+			on_init = function(client)
+				client.handlers["tsserver/request"] = function(_, result, context)
+					local clients = vim.lsp.get_clients({ bufnr = context.bufnr, name = "vtsls" })
+					if #clients == 0 then
+						vim.notify(
+							"Could not found `vtsls` lsp client, vue_lsp would not work without it.",
+							vim.log.levels.ERROR
+						)
+						return
+					end
+					local ts_client = clients[1]
+
+					local param = unpack(result)
+					local id, command, payload = unpack(param)
+					ts_client:exec_cmd({
+						title = "vue_request_forward", -- You can give title anything as it's used to represent a command in the UI, `:h Client:exec_cmd`
+						command = "typescript.tsserverRequest",
+						arguments = {
+							command,
+							payload,
+						},
+					}, { bufnr = context.bufnr }, function(_, r)
+						local response_data = { { id, r.body } }
+						---@diagnostic disable-next-line: param-type-mismatch
+						client:notify("tsserver/response", response_data)
+					end)
+				end
+			end,
+		}
+		-- nvim 0.11 or above
+		vim.lsp.config("vtsls", vtsls_config)
+		vim.lsp.config("vue_ls", vue_ls_config)
+
+		-- ESLint
+		vim.lsp.config("eslint", {
 			on_attach = function(client, bufnr)
-				-- Format on save
 				vim.api.nvim_create_autocmd("BufWritePre", {
 					buffer = bufnr,
-					command = "EslintFixAll",
+					callback = function()
+						if vim.fn.exists(":EslintFixAll") == 2 then
+							vim.cmd("EslintFixAll")
+						end
+					end,
 				})
 			end,
 			settings = {
-				-- Critical for eslint.config.js support
-				experimental = {
-					useFlatConfig = true,
-				},
+				experimental = { useFlatConfig = true },
 				format = true,
 				validate = "on",
-				codeActionOnSave = {
-					enable = true,
-					mode = "all",
-				},
+				codeActionOnSave = { enable = true, mode = "all" },
 				run = "onType",
 				workingDirectory = { mode = "location" },
 			},
-			filetypes = {
-				"javascript",
-				"javascriptreact",
-				"typescript",
-				"typescriptreact",
-				"vue",
-			},
+			filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
 		})
 
-		-- C# via csharp_ls
-		lspconfig.csharp_ls.setup({
+		-- C#
+		vim.lsp.config("csharp_ls", {
 			on_attach = on_attach,
-			capabilities = capabilities,
+			capabilities = cap,
 			root_dir = lspconfig.util.root_pattern("*.sln", "*.csproj", ".git", ".razor"),
 		})
 
-		-- HTML
-		lspconfig.html.setup({
+		-- HTML & CSS
+		vim.lsp.config("html", { on_attach = on_attach, capabilities = cap })
+		vim.lsp.config("cssls", { on_attach = on_attach, capabilities = cap })
+		vim.lsp.config("emmet_ls", {
 			on_attach = on_attach,
-			capabilities = capabilities,
-			filetypes = { "html", "vue" },
+			capabilities = cap,
+			filters = { "html", "css", "javascript", "typescript", "vue" },
 		})
 
-		-- CSS / SCSS / LESS
-		lspconfig.cssls.setup({
-			on_attach = on_attach,
-			capabilities = capabilities,
-			filetypes = { "css", "scss", "less", "vue" },
-		})
-
-		-- Auto diagnostics on hover
+		-- Diagnostic autos
 		vim.api.nvim_create_autocmd("CursorHold", {
 			callback = function()
 				vim.diagnostic.open_float(nil, { focusable = false })
 			end,
 		})
-
-		-- LSP restart on detach
 		vim.api.nvim_create_autocmd("LspDetach", {
 			callback = function(args)
 				local client = vim.lsp.get_client_by_id(args.data.client_id)
@@ -130,14 +151,11 @@ return {
 				end
 			end,
 		})
-
-		-- Show diagnostics on file open
 		vim.api.nvim_create_autocmd("BufReadPost", {
 			callback = function(args)
 				vim.defer_fn(function()
 					local bufnr = args.buf
-					local clients = vim.lsp.get_clients({ bufnr = bufnr })
-					if #clients > 0 and #vim.diagnostic.get(bufnr) > 0 then
+					if #vim.lsp.get_active_clients({ bufnr = bufnr }) > 0 and #vim.diagnostic.get(bufnr) > 0 then
 						vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" })
 					end
 				end, 200)

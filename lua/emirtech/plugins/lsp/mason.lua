@@ -25,7 +25,7 @@ return {
 		})
 
 		mason_lspconfig.setup({
-			automatic_enable = false, -- safer default
+			automatic_enable = true,
 			-- list of servers for mason to install
 			-- if you want to see all of the servers run :Mason
 			ensure_installed = {
@@ -42,6 +42,7 @@ return {
 				"vue_ls", -- Vue.js LSP
 				"eslint",
 				"csharp_ls", -- c# LSP
+				"vtsls",
 			},
 		})
 
