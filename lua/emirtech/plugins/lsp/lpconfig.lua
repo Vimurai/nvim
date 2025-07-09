@@ -54,6 +54,8 @@ return {
 					hybridMode = false,
 				},
 			},
+		}, {
+			priority = 10, -- ensure this is higher than tailwind, html, etc.
 		})
 		vim.lsp.enable("vue_ls")
 
@@ -134,7 +136,7 @@ return {
 			callback = function(args)
 				vim.defer_fn(function()
 					local bufnr = args.buf
-					local clients = vim.lsp.get_active_clients({ bufnr = bufnr })
+					local clients = vim.lsp.get_clients({ bufnr = bufnr })
 					if #clients > 0 and #vim.diagnostic.get(bufnr) > 0 then
 						vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" })
 					end

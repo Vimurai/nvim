@@ -7,6 +7,10 @@ vim.cmd("highlight LineNr guibg=NONE ctermbg=NONE")
 vim.cmd("highlight CursorLineNr guibg=NONE ctermbg=NONE")
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
+-- Disable netrw at the very start of your init.lua (strongly advised)
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
 local opt = vim.opt
 opt.relativenumber = true
 opt.number = true
@@ -97,5 +101,11 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	group = vim.api.nvim_create_augroup("kickstart-highlight-yank", { clear = true }),
 	callback = function()
 		vim.highlight.on_yank()
+	end,
+})
+
+vim.api.nvim_create_autocmd("SwapExists", {
+	callback = function(args)
+		vim.v.swapchoice = "d" -- always delete
 	end,
 })
