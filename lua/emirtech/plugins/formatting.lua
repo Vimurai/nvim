@@ -10,7 +10,7 @@ return {
 				typescript = { "prettier" },
 				javascriptreact = { "prettier" },
 				typescriptreact = { "prettier" },
-				svelte = { "eslint_d", "prettier" },
+				svelte = { "prettier" },
 				css = { "prettier" },
 				scss = { "prettier" },
 				less = { "prettier" },

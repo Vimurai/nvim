@@ -42,7 +42,7 @@ return {
 
 		local vue_language_server_path = vim.fn.stdpath("data")
 			.. "/mason/packages/vue-language-server/node_modules/@vue/language-server"
-		-- local vue_language_server_path = "/path/to/@vue/language-server"
+
 		local vue_plugin = {
 			name = "@vue/typescript-plugin",
 			location = vue_language_server_path,
@@ -50,6 +50,7 @@ return {
 			configNamespace = "typescript",
 		}
 		local vtsls_config = {
+			on_attach = on_attach, -- 🔥 Add this line
 			settings = {
 				vtsls = {
 					tsserver = {
@@ -91,6 +92,7 @@ return {
 					end)
 				end
 			end,
+			on_attach = on_attach, -- 🔥 Add this line
 		}
 		-- nvim 0.11 or above
 		vim.lsp.config("vtsls", vtsls_config)

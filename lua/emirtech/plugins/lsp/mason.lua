@@ -29,7 +29,6 @@ return {
 			-- list of servers for mason to install
 			-- if you want to see all of the servers run :Mason
 			ensure_installed = {
-				"ts_ls",
 				"html",
 				"cssls",
 				"tailwindcss",
@@ -40,9 +39,9 @@ return {
 				"prismals",
 				"pyright",
 				"vue_ls", -- Vue.js LSP
-				"eslint",
 				"csharp_ls", -- c# LSP
 				"vtsls",
+				"eslint",
 			},
 		})
 
@@ -53,13 +52,12 @@ return {
 				"stylua", -- lua formatter
 				"isort", -- python formatter
 				"pylint",
-				"eslint_d",
 				"shfmt", -- shell script formatter
 				"markdownlint", -- markdown linter
 				"jsonlint", -- for JSON files
 				"clang-format", -- if working with C/C++
 				"csharpier", -- C# formatter
-				"eslint_d", -- JavaScript/TypeScript linter
+				-- "eslint_d", -- JavaScript/TypeScript linter
 			},
 		})
 	end,
