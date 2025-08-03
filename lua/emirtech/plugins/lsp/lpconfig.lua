@@ -46,6 +46,7 @@ return {
 		local vue_plugin = {
 			name = "@vue/typescript-plugin",
 			location = vue_language_server_path,
+			enableForWorkspaceTypeScriptVersions = true,
 			languages = { "vue" },
 			configNamespace = "typescript",
 		}
