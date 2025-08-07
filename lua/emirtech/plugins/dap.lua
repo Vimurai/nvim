@@ -16,28 +16,21 @@ return {
 			-- setup netcoredbg adapter
 			require("netcoredbg-macOS-arm64").setup(dap)
 
-			-- C#/.NET
-			dap.adapters.coreclr = {
-				type = "executable",
-				command = "/usr/local/bin/netcoredbg", -- change path if needed
-				args = { "--interpreter=vscode" },
-			}
-
 			dap.configurations.cs = {
-				-- 🟢 LAUNCH config (for debugging after build)
 				{
 					type = "coreclr",
 					name = "Launch .NET Project",
 					request = "launch",
-					cwd = vim.fn.getcwd(),
 					program = function()
-						local projectName = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
-						return vim.fn.getcwd() .. "/bin/Debug/net9.0/" .. projectName .. ".dll"
+						local fn = vim.fn
+						local projectName = fn.fnamemodify(fn.getcwd(), ":t")
+						return fn.getcwd() .. "/UmmahConnect.API/bin/Debug/net9.0/" .. projectName .. ".API.dll"
 					end,
-					stopAtEntry = true,
+					stopAtEntry = false,
+					env = {
+						ASPNETCORE_ENVIRONMENT = "Development",
+					},
 				},
-
-				-- 🟡 ATTACH config (for attaching to running process)
 				{
 					type = "coreclr",
 					name = "Attach to .NET Process",
@@ -81,6 +74,8 @@ return {
 					runtimeExecutable = "ts-node",
 				},
 			}
+
+			dap.defaults.fallback.terminal_win_cmd = "tabnew"
 
 			-- keymaps: <leader>d{c|s|n|o|b|r|l}
 			local map = vim.keymap.set

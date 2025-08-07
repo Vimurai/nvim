@@ -135,20 +135,25 @@ return {
 		})
 
 		-- C#
-		vim.lsp.config("csharp_ls", {
-			on_attach = on_attach,
-			capabilities = cap,
-			root_dir = lspconfig.util.root_pattern("*.sln", "*.csproj", ".git", ".razor"),
-		})
+		vim.lsp.enable("omnisharp")
+		-- vim.lsp.config("csharp_ls", {
+		-- 	on_attach = on_attach,
+		-- 	capabilities = cap,
+		-- 	root_dir = lspconfig.util.root_pattern("*.sln", "*.csproj", ".git", ".razor"),
+		-- })
 
 		-- HTML & CSS
-		vim.lsp.config("html", { on_attach = on_attach, capabilities = cap })
-		vim.lsp.config("cssls", { on_attach = on_attach, capabilities = cap })
-		vim.lsp.config("emmet_ls", {
-			on_attach = on_attach,
-			capabilities = cap,
-			filters = { "html", "css", "javascript", "typescript", "vue" },
-		})
+		vim.lsp.enable("html")
+		vim.lsp.enable("cssls")
+		vim.lsp.enable("emmet_ls")
+
+		-- vim.lsp.config("html", { on_attach = on_attach, capabilities = cap })
+		-- vim.lsp.config("cssls", { on_attach = on_attach, capabilities = cap })
+		-- vim.lsp.config("emmet_ls", {
+		-- 	on_attach = on_attach,
+		-- 	capabilities = cap,
+		-- 	filters = { "html", "css", "javascript", "typescript", "vue" },
+		-- })
 
 		-- Diagnostic autos
 		vim.api.nvim_create_autocmd("CursorHold", {
