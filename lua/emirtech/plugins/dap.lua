@@ -1,5 +1,3 @@
-local home = vim.fn.expand("$HOME")
-
 return {
 	{
 		"mfussenegger/nvim-dap",
@@ -87,11 +85,7 @@ return {
 			map("n", "<leader>dr", dap.repl.open, { desc = "DAP Open REPL" })
 			map("n", "<leader>dl", dap.run_last, { desc = "DAP Run Last" })
 			map("n", "<leader>dt", function()
-				if require("dapui").is_open() then
-					require("dapui").close()
-				else
-					require("dapui").open()
-				end
+				require("dapui").toggle()
 			end, { desc = "DAP Toggle UI" })
 		end,
 	},
