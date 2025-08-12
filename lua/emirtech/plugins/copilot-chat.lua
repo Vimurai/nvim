@@ -14,312 +14,317 @@ return {
 				-- Originals
 				Rename = {
 					prompt = "Please rename the variable or function to something more descriptive and meaningful based on the provided code context.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				MakeComponent = {
 					prompt = "Please create a new component based on the provided code context.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 
 				-- Explain / Review
 				ExplainLikeSenior = {
 					prompt = "Explain the code at a senior level: goals, data flow, invariants, trade-offs, risks.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				ExplainLikeJunior = {
 					prompt = "Explain the code for a beginner: what it does, step-by-step, with a tiny example.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				ReviewBugs = {
 					prompt = "Find likely bugs, edge cases, logic errors; suggest minimal fixes.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				SecurityReview = {
 					prompt = "Security review: inputs/outputs, trust boundaries, injection, authn/authz, secrets, logging. Propose fixes.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				PerformanceReview = {
 					prompt = "Analyze time/space complexity and suggest concrete optimizations with trade-offs.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				ConcurrencyReview = {
 					prompt = "Check for concurrency issues: shared state, races, deadlocks, async pitfalls. Suggest safer patterns.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 
 				-- Refactor / Clean Architecture
 				RefactorForReadability = {
 					prompt = "Refactor for clarity & maintainability. Keep behavior identical. Prefer small pure functions, good names, remove duplication.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
+
 				RefactorToCleanArchitecture = {
 					prompt = "Refactor to a lightweight Clean Architecture (domain/entities+VOs, application/use-cases, infrastructure/adapters). Outline files & responsibilities.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
+
 				ExtractFunction = {
 					prompt = "Extract small, well-named functions. Keep side-effects at the edges; return pure values where possible.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				ExtractInterface = {
 					prompt = "Extract an interface to improve testability. Show interface and updated usage points.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				AddGuardClauses = {
 					prompt = "Add guard clauses and fail-fast checks. Keep messages actionable and avoid deep nesting.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				AddErrorHandling = {
 					prompt = "Add robust error handling (clear exceptions or Result types). Avoid swallowing errors.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				AddLogging = {
 					prompt = "Add structured logging (operation names, correlation IDs, key fields). Keep it low-noise.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				AddTelemetry = {
 					prompt = "Instrument with metrics/traces (latency, counts, error rates). Suggest metric names and labels.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 
 				-- DDD / .NET
 				DDDIdentifyAggregates = {
 					prompt = "Identify aggregates, aggregate roots, bounded contexts; propose entity/VO splits and domain events.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
+
 				CreateDomainEvent = {
 					prompt = "Propose a Domain Event (payload + naming). Show IDomainEvent interface and a sample handler wiring.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
+
 				AddNullabilityAnnotations = {
 					prompt = "Add C# nullable annotations & checks; eliminate possible NREs and show safer signatures.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				ConvertToLINQ = {
 					prompt = "Convert to idiomatic LINQ where it improves clarity/performance. Keep it readable.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				OptimizeLINQ = {
 					prompt = "Optimize LINQ (defer execution, avoid multiple enumeration, push filters to DB).",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				WriteXmlDocComments = {
 					prompt = "Write concise C# XML doc comments (summary, params, returns, exceptions).",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				GenerateFluentValidation = {
 					prompt = "Propose FluentValidation rules for DTOs/entities (include edge cases and custom validators).",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				GenerateMediatRHandler = {
 					prompt = "Sketch a MediatR request/response and handler with validation, domain call, and result mapping.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				IntroduceEnum = {
 					prompt = "Replace magic constants with a typed Enum (or smart enum). Show C# declaration and integration.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				IntroduceValueObject = {
 					prompt = "Identify a Value Object (invariants, validation, equality). Show a C# example and Domain placement.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 
 				-- Testing
 				AddUnitTests = {
 					prompt = "Generate focused unit tests (Arrange/Act/Assert): success, failure, and edge cases. Use NUnit/xUnit style.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				AddPropertyTests = {
 					prompt = "Propose property-based tests: identify invariants and boundaries to fuzz.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				AddIntegrationTest = {
 					prompt = "Outline an integration test: setup, external deps, fixtures, teardown.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				AddTestDataBuilders = {
 					prompt = "Create Test Data Builders for complex objects. Show fluent builder API and examples.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 
 				-- API / DTO / Mapping
 				CreateDTOs = {
 					prompt = "Define DTOs vs domain objects; show mapping code (Mapster/AutoMapper) and where to place it.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				ValidateAPIContracts = {
 					prompt = "Review API contract clarity and versioning; suggest breaking and non-breaking changes with examples.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 
 				-- Data / SQL
 				SQLReview = {
 					prompt = "Review SQL for correctness and performance; add indexes, parameterization, and safer patterns.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				OptimizeQuery = {
 					prompt = "Optimize query logic: reduce roundtrips, batch operations, pagination, projection.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 
 				-- JS/TS/Vue helpers
 				ConvertToAsyncAwait = {
 					prompt = "Convert callbacks/promises to idiomatic async/await with proper error handling.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				ExplainReactivity = {
 					prompt = "Explain Vue reactivity implications; refs/reactive/computed pitfalls and fixes.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 
 				-- QoL
 				ReviewNaming = {
 					prompt = "Review names and propose clearer, domain-oriented names aligned with ubiquitous language.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				GenerateCommitConventional = {
 					prompt = "Write a Conventional Commit subject and body (include scope and brief rationale).",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				CreateChangelogEntry = {
 					prompt = "Draft a concise CHANGELOG entry (Added/Changed/Fixed/Removed).",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				CreateGitHubIssue = {
 					prompt = "Create a GitHub issue from the code: title, problem statement, acceptance criteria, risks.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 				TranslateCommentsToEnglish = {
 					prompt = "Translate comments/identifiers to clear English while keeping code intact.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
+
 				TranslateCommentsToGerman = {
 					prompt = "Translate comments/identifiers to clear German while keeping code intact.",
-					selection = function(selected_text)
-						local select_module = require("CopilotChat.select")
-						return select_module.visual(selected_text) or select_module.buffer()
+					selection = function(source)
+						return require("CopilotChat.select").visual(source)
+							or require("CopilotChat.select").buffer(source)
 					end,
 				},
 			},
@@ -329,11 +334,6 @@ return {
 	config = function(_, opts)
 		require("CopilotChat").setup(opts)
 
-		-- Helper to run a named prompt
-		local function run_cc_prompt(key)
-			vim.cmd("CopilotChatPrompt " .. key)
-		end
-
 		local wk = require("which-key")
 
 		---------------------------------------------------------------------------
@@ -342,6 +342,13 @@ return {
 		wk.add({
 			{ "<leader>z", group = "CopilotChat (Normal)", mode = "n" },
 
+			-- Open CopilotChat
+			{
+				"<leader>zC",
+				"<cmd>CopilotChat<CR>",
+				desc = "Open CopilotChat",
+				mode = "n",
+			},
 			-- Explain
 			{ "<leader>ze", group = "Explain", mode = "n" },
 			{
