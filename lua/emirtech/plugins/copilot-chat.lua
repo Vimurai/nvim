@@ -349,6 +349,7 @@ return {
 				desc = "Open CopilotChat",
 				mode = "n",
 			},
+
 			-- Explain
 			{ "<leader>ze", group = "Explain", mode = "n" },
 			{
