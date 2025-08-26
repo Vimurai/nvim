@@ -8,6 +8,10 @@ return {
 		indent = { enabled = true }, -- enable the indent window
 		explorer = {
 			enabled = true,
+			replace_netrw = true,
+			follow_current_file = true,
+			hidden = true, -- show dot/hidden files
+			ignored = false, -- show gitignored too
 		},
 		dashboard = {
 			sections = {
