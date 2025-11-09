@@ -9,7 +9,6 @@ return {
 		"ray-x/lsp_signature.nvim",
 	},
 	config = function()
-		local lspconfig = require("lspconfig")
 		local cap = require("cmp_nvim_lsp").default_capabilities()
 		cap.textDocument.completion.completionItem.snippetSupport = true
 		cap.offsetEncoding = { "utf-16" }
@@ -63,38 +62,7 @@ return {
 			},
 			filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
 		}
-		--
-		-- local vue_ls_config = {
-		-- 	on_init = function(client)
-		-- 		client.handlers["tsserver/request"] = function(_, result, context)
-		-- 			local clients = vim.lsp.get_clients({ bufnr = context.bufnr, name = "vtsls" })
-		-- 			if #clients == 0 then
-		-- 				vim.notify(
-		-- 					"Could not found `vtsls` lsp client, vue_lsp would not work without it.",
-		-- 					vim.log.levels.ERROR
-		-- 				)
-		-- 				return
-		-- 			end
-		-- 			local ts_client = clients[1]
-		--
-		-- 			local param = unpack(result)
-		-- 			local id, command, payload = unpack(param)
-		-- 			ts_client:exec_cmd({
-		-- 				title = "vue_request_forward", -- You can give title anything as it's used to represent a command in the UI, `:h Client:exec_cmd`
-		-- 				command = "typescript.tsserverRequest",
-		-- 				arguments = {
-		-- 					command,
-		-- 					payload,
-		-- 				},
-		-- 			}, { bufnr = context.bufnr }, function(_, r)
-		-- 				local response_data = { { id, r.body } }
-		-- 				---@diagnostic disable-next-line: param-type-mismatch
-		-- 				client:notify("tsserver/response", response_data)
-		-- 			end)
-		-- 		end
-		-- 	end,
-		-- 	on_attach = on_attach, -- 🔥 Add this line
-		-- }
+
 		-- -- nvim 0.11 or above
 		vim.lsp.config("vtsls", vtsls_config)
 		-- vim.lsp.config("vue_ls", vue_ls_config)
@@ -114,14 +82,20 @@ return {
 		-- ESLint
 		vim.lsp.config("eslint", {
 			on_attach = function(client, bufnr)
-				vim.api.nvim_create_autocmd("BufWritePre", {
-					buffer = bufnr,
-					callback = function()
-						if vim.fn.exists(":EslintFixAll") == 2 then
-							vim.cmd("EslintFixAll")
-						end
-					end,
-				})
+				if client.server_capabilities.codeActionProvider then
+					vim.api.nvim_create_autocmd("BufWritePre", {
+						buffer = bufnr,
+						callback = function()
+							vim.lsp.buf.code_action({
+								apply = true,
+								context = {
+									only = { "source.fixAll.eslint" },
+									diagnostics = {},
+								},
+							})
+						end,
+					})
+				end
 			end,
 			settings = {
 				experimental = { useFlatConfig = true },
@@ -136,24 +110,11 @@ return {
 
 		-- C#
 		vim.lsp.enable("omnisharp")
-		-- vim.lsp.config("csharp_ls", {
-		-- 	on_attach = on_attach,
-		-- 	capabilities = cap,
-		-- 	root_dir = lspconfig.util.root_pattern("*.sln", "*.csproj", ".git", ".razor"),
-		-- })
 
 		-- HTML & CSS
 		vim.lsp.enable("html")
 		vim.lsp.enable("cssls")
 		vim.lsp.enable("emmet_ls")
-
-		-- vim.lsp.config("html", { on_attach = on_attach, capabilities = cap })
-		-- vim.lsp.config("cssls", { on_attach = on_attach, capabilities = cap })
-		-- vim.lsp.config("emmet_ls", {
-		-- 	on_attach = on_attach,
-		-- 	capabilities = cap,
-		-- 	filters = { "html", "css", "javascript", "typescript", "vue" },
-		-- })
 
 		-- Diagnostic autos
 		vim.api.nvim_create_autocmd("CursorHold", {
@@ -161,6 +122,7 @@ return {
 				vim.diagnostic.open_float(nil, { focusable = false })
 			end,
 		})
+
 		vim.api.nvim_create_autocmd("LspDetach", {
 			callback = function(args)
 				local client = vim.lsp.get_client_by_id(args.data.client_id)
@@ -171,6 +133,7 @@ return {
 				end
 			end,
 		})
+
 		vim.api.nvim_create_autocmd("BufReadPost", {
 			callback = function(args)
 				vim.defer_fn(function()
