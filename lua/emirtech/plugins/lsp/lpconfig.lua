@@ -9,6 +9,26 @@ return {
 		"ray-x/lsp_signature.nvim",
 	},
 	config = function()
+		local lsp = require("lsp-zero")
+
+		lsp.on_attach(function(client, bufnr)
+			-- see :help lsp-zero-keybindings
+			-- to learn the available actions
+			lsp.default_keymaps({ buffer = bufnr })
+
+			local map = vim.keymap.set
+			local opts = { buffer = bufnr, silent = true }
+
+			map({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
+			map("n", "<leader>rn", vim.lsp.buf.rename, opts)
+			map("n", "<leader>rs", ":LspRestart<CR>", opts)
+			map("n", "<leader>d", vim.diagnostic.open_float, opts)
+		end)
+
+		lsp.setup()
+
+		-- (Optional) Configure lua language server for neovim
+
 		local cap = require("cmp_nvim_lsp").default_capabilities()
 		cap.textDocument.completion.completionItem.snippetSupport = true
 		cap.offsetEncoding = { "utf-16" }
@@ -26,18 +46,13 @@ return {
 			},
 		})
 
-		local function on_attach(client, bufnr)
-			client.server_capabilities.documentFormattingProvider = false
-			client.server_capabilities.documentRangeFormattingProvider = false
-
-			local map = vim.keymap.set
-			local opts = { buffer = bufnr, silent = true }
-
-			map({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
-			map("n", "<leader>rn", vim.lsp.buf.rename, opts)
-			map("n", "<leader>rs", ":LspRestart<CR>", opts)
-			map("n", "<leader>d", vim.diagnostic.open_float, opts)
-		end
+		vim.api.nvim_create_autocmd("LspAttach", {
+			desc = "LSP actions",
+			callback = function(event)
+				vim.keymap.set("n", "K", "<cmd>lua vim.lsp.buf.hover()<cr>", { buffer = event.buf })
+				-- More keybindings and commands....
+			end,
+		})
 
 		local vue_language_server_path = vim.fn.stdpath("data")
 			.. "/mason/packages/vue-language-server/node_modules/@vue/language-server"
@@ -50,7 +65,6 @@ return {
 			configNamespace = "typescript",
 		}
 		local vtsls_config = {
-			on_attach = on_attach, -- 🔥 Add this line
 			settings = {
 				vtsls = {
 					tsserver = {
@@ -70,79 +84,12 @@ return {
 
 		vim.lsp.config("vue_ls", {
 			filetypes = { "vue", "typescript", "javascript", "javascriptreact", "typescriptreact" },
-			on_attach = on_attach,
 			init_options = {
 				typescript = {
 					tsdk = vim.fn.stdpath("data")
 						.. "/mason/packages/typescript-language-server/node_modules/typescript/lib",
 				},
 			},
-		})
-
-		-- ESLint
-		vim.lsp.config("eslint", {
-			on_attach = function(client, bufnr)
-				if client.server_capabilities.codeActionProvider then
-					vim.api.nvim_create_autocmd("BufWritePre", {
-						buffer = bufnr,
-						callback = function()
-							vim.lsp.buf.code_action({
-								apply = true,
-								context = {
-									only = { "source.fixAll.eslint" },
-									diagnostics = {},
-								},
-							})
-						end,
-					})
-				end
-			end,
-			settings = {
-				experimental = { useFlatConfig = true },
-				format = true,
-				validate = "on",
-				codeActionOnSave = { enable = true, mode = "all" },
-				run = "onType",
-				workingDirectory = { mode = "location" },
-			},
-			filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
-		})
-
-		-- C#
-		vim.lsp.enable("omnisharp")
-
-		-- HTML & CSS
-		vim.lsp.enable("html")
-		vim.lsp.enable("cssls")
-		vim.lsp.enable("emmet_ls")
-
-		-- Diagnostic autos
-		vim.api.nvim_create_autocmd("CursorHold", {
-			callback = function()
-				vim.diagnostic.open_float(nil, { focusable = false })
-			end,
-		})
-
-		vim.api.nvim_create_autocmd("LspDetach", {
-			callback = function(args)
-				local client = vim.lsp.get_client_by_id(args.data.client_id)
-				if client and client.name ~= "" then
-					vim.schedule(function()
-						vim.cmd("LspStart " .. client.name)
-					end)
-				end
-			end,
-		})
-
-		vim.api.nvim_create_autocmd("BufReadPost", {
-			callback = function(args)
-				vim.defer_fn(function()
-					local bufnr = args.buf
-					if #vim.lsp.get_active_clients({ bufnr = bufnr }) > 0 and #vim.diagnostic.get(bufnr) > 0 then
-						vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" })
-					end
-				end, 200)
-			end,
 		})
 	end,
 }

@@ -24,9 +24,10 @@ return {
 				python = { "isort", "black" },
 				vue = { "prettier" }, -- Added Vue formatting support
 				cs = { "csharpier" }, -- Added C# formatting support
+				go = { "gofmt", "gofmt" }, -- Added Go formatting support
 			},
 			format_on_save = {
-				lsp_fallback = false,
+				lsp_fallback = true,
 				async = false,
 				timeout_ms = 1000,
 			},

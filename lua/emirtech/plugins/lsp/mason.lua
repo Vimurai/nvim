@@ -42,6 +42,7 @@ return {
 				"csharp_ls", -- c# LSP
 				"vtsls",
 				"eslint",
+				"gopls",
 			},
 		})
 
@@ -54,6 +55,7 @@ return {
 				"pylint",
 				"shfmt", -- shell script formatter
 				"markdownlint", -- markdown linter
+				"golines", -- Go code formatter
 				"jsonlint", -- for JSON files
 				"clang-format", -- if working with C/C++
 				"csharpier", -- C# formatter

@@ -14,23 +14,29 @@ return {
 
 		config = function()
 			---------------------------------------------------------------------------
-			-- 1) Picker wiring: snacks preferred, Telescope fallback for vim.ui.select
+			-- 1) Picker wiring: Snacks preferred, Telescope fallback for vim.ui.select
 			---------------------------------------------------------------------------
 			local function setup_ui_select()
 				local ok_snacks, snacks = pcall(require, "snacks")
 				if ok_snacks and snacks.picker and snacks.picker.enable_ui_select then
 					snacks.picker.enable_ui_select()
-				else
-					local ok_tel, telescope = pcall(require, "telescope")
-					if ok_tel then
-						pcall(function()
-							telescope.setup({ extensions = { ["ui-select"] = {} } })
-							telescope.load_extension("ui-select")
-						end)
-						if telescope.extensions and telescope.extensions["ui-select"] then
-							vim.ui.select = function(items, opts, on_choice)
-								telescope.extensions["ui-select"].select(items, opts, on_choice)
-							end
+					return
+				end
+
+				local ok_tel, telescope = pcall(require, "telescope")
+				if ok_tel then
+					pcall(function()
+						telescope.setup({
+							extensions = {
+								["ui-select"] = {},
+							},
+						})
+						telescope.load_extension("ui-select")
+					end)
+
+					if telescope.extensions and telescope.extensions["ui-select"] then
+						vim.ui.select = function(items, opts, on_choice)
+							telescope.extensions["ui-select"].select(items, opts, on_choice)
 						end
 					end
 				end
@@ -41,7 +47,8 @@ return {
 			-- 2) CopilotChat base setup
 			---------------------------------------------------------------------------
 			local chat = require("CopilotChat")
-			local select_api = require("CopilotChat.select")
+			local window = chat.chat
+
 			chat.setup({
 				window = {
 					layout = "vertical",
@@ -50,48 +57,57 @@ return {
 					title = "🤖 CopilotChat",
 				},
 				auto_insert_mode = true,
-				-- default selection (used by prompts you might call directly)
-				selection = function(source)
-					return select_api.visual(source) or select_api.buffer(source)
-				end,
+				-- we’ll drive context via #buffer / #buffers / #selection in prompts
 			})
 
-			---------------------------------------------------------------------------
-			-- 3) Source capture helpers: always read from the *code* window/buffer
-			---------------------------------------------------------------------------
 			local wk = require("which-key")
-			local ui = require("CopilotChat").chat
 
-			local function capture_source_from_code()
-				local src_win
-				local focused = false
-				pcall(function()
-					focused = ui:focused()
-				end)
-				if focused then
-					src_win = vim.fn.win_getid(vim.fn.winnr("#"))
+			---------------------------------------------------------------------------
+			-- 3) Helpers: source + context (selection vs buffer)
+			---------------------------------------------------------------------------
+			-- Always tell CopilotChat which *code* window is the source
+			local function set_source_to_current_window()
+				local winnr = vim.api.nvim_get_current_win()
+				local bufnr = vim.api.nvim_win_get_buf(winnr)
+				local ft = vim.bo[bufnr].filetype
+
+				-- If we’re accidentally in the chat window, don’t overwrite source
+				if ft ~= "copilot-chat" then
+					-- API is a function, not a method: window.set_source(winnr)
+					pcall(window.set_source, winnr)
+				end
+
+				return winnr, bufnr
+			end
+
+			-- Utility: are we in any visual mode?
+			local function in_visual_mode()
+				local m = vim.fn.mode()
+				return m == "v" or m == "V" or m == "\22" -- charwise, linewise, block
+			end
+
+			-- Ask with smart context:
+			--  - visual → #selection
+			--  - normal → #buffer:active
+			--  - always include #buffers so it knows about all open files
+			local function ask_smart(prompt)
+				set_source_to_current_window()
+
+				local header
+				if in_visual_mode() then
+					header = "#selection\n"
 				else
-					src_win = vim.api.nvim_get_current_win()
+					header = "#buffer:active\n"
 				end
-				if not (src_win and vim.api.nvim_win_is_valid(src_win)) then
-					src_win = vim.api.nvim_get_current_win()
-				end
-				-- Set CopilotChat's source window (API may be method or function; handle both)
-				if ui.set_source then
-					local ok = pcall(function()
-						ui.set_source(src_win)
-					end)
-					if not ok then
-						pcall(function()
-							ui:set_source(src_win)
-						end)
-					end
-				end
-				return { winnr = src_win, bufnr = vim.api.nvim_win_get_buf(src_win) }
+
+				chat.ask(header .. prompt, {
+					-- Make it aware of all open buffers by default
+					sticky = { "#buffers" }, -- all listed buffers in context
+				})
 			end
 
 			---------------------------------------------------------------------------
-			-- 4) Prompts & actions
+			-- 4) Rename prompt (your DDD / Clean Code rules)
 			---------------------------------------------------------------------------
 			local RENAME_PROMPT = table.concat({
 				"Refactor names to follow professional standards:",
@@ -102,13 +118,13 @@ return {
 				"- Pro C# 10 with .NET 6 conventions.",
 				"",
 				"Scope:",
-				"- If selection is provided: restrict renames strictly to the selected code and update references within that selection.",
-				"- Otherwise: process the whole buffer coherently.",
+				"- If selection is provided: restrict renames strictly to the selected code and update references only inside that selection.",
+				"- Otherwise: process the whole active buffer coherently.",
 				"",
 				"Rules:",
 				"- Do NOT change behavior or add new features.",
 				"- Rename identifiers (variables, parameters, fields, methods, local functions) to intention-revealing names.",
-				"- Keep public API shape unless the file is purely internal; if a rename affects public API, call it out.",
+				"- Keep public API shape unless the file is purely internal; if a rename affects public API, call it out explicitly.",
 				"- Update related XML/doc comments and references in the edited scope.",
 				"- Prefer domain terms (e.g., Džemat, Donation, Subscription, Project).",
 				"- Examples: usr → user, usrLst → users, calc → CalculateMonthlySubscriptionCost, amt → amount.",
@@ -117,42 +133,110 @@ return {
 				"- Provide a unified diff suitable for application; minimal, precise edits only.",
 			}, "\n")
 
-			-- Ask using visual OR buffer (fallback), for general discuss/explain prompts
-			local function ask_vis_or_buf(prompt)
-				local source = capture_source_from_code()
-				chat.ask(prompt, {
-					selection = function(_)
-						return select_api.visual(source) or select_api.buffer(source)
-					end,
-					sticky = { "#buffer:active" },
-				})
-			end
+			local REFACTOR_PROMPT = table.concat({
+				"Refactor the code to improve its structure and readability without changing its external behavior. Follow these guidelines:",
+				"- Apply principles from 'Clean Code' by Robert C. Martin, such as meaningful naming, small functions, and single responsibility.",
+				"- Use design patterns where appropriate to enhance code organization and maintainability.",
+				"- Ensure that the refactored code adheres to best practices in the relevant programming language.",
+				"",
+				"Scope:",
+				"- If a selection is provided: restrict refactoring strictly to the selected code and update references only inside that selection.",
+				"- Otherwise: process the whole active buffer coherently.",
+				"",
+				"Rules:",
+				"- Do NOT introduce new features or change existing functionality.",
+				"- Focus on improving code clarity, reducing complexity, and enhancing modularity.",
+				"- Update related comments and documentation within the edited scope as necessary.",
+				"",
+				"Output:",
+				"- Provide a unified diff suitable for application; minimal, precise edits only.",
+			}, "\n")
 
-			-- === RENAME ===
-			-- Visual-mode: strictly selection only (no fallback)
-			local function rename_selection_only()
-				local source = capture_source_from_code()
-				local sel = select_api.visual(source)
-				if not sel then
-					vim.notify("CopilotChat: No visual selection detected.", vim.log.levels.WARN)
+			-- Selection-only refactor (visual mode)
+			local function refactor_selection_only()
+				if not in_visual_mode() then
+					vim.notify("CopilotChat: visual selection required for this mapping.", vim.log.levels.WARN)
 					return
 				end
-				chat.ask(RENAME_PROMPT, {
-					selection = function(_)
-						return sel
-					end, -- force selection only
-					sticky = { "#buffer:active" },
+
+				set_source_to_current_window()
+
+				-- #selection = only the visually selected code
+				local prompt = table.concat({
+					"#selection",
+					"",
+					REFACTOR_PROMPT,
+					"",
+					"IMPORTANT:",
+					"- Only edit inside #selection.",
+					"- Ignore any other buffers and lines outside the selection.",
+				}, "\n")
+
+				chat.ask(prompt, {
+					sticky = { "#buffers" }, -- still let it *see* other buffers, but edits must be selection only
 				})
 			end
 
-			-- Normal-mode: whole buffer
+			-- Whole-buffer refactor (normal mode)
+			local function refactor_whole_buffer()
+				set_source_to_current_window()
+
+				local prompt = table.concat({
+					"#buffer:active",
+					"",
+					REFACTOR_PROMPT,
+					"",
+					"IMPORTANT:",
+					"- Treat the entire active buffer as the refactor scope.",
+					"- Use other open buffers (#buffers) only for extra context if needed.",
+				}, "\n")
+
+				chat.ask(prompt, {
+					sticky = { "#buffers" },
+				})
+			end
+
+			-- Selection-only rename (visual mode)
+			local function rename_selection_only()
+				if not in_visual_mode() then
+					vim.notify("CopilotChat: visual selection required for this mapping.", vim.log.levels.WARN)
+					return
+				end
+
+				set_source_to_current_window()
+
+				-- #selection = only the visually selected code
+				local prompt = table.concat({
+					"#selection",
+					"",
+					RENAME_PROMPT,
+					"",
+					"IMPORTANT:",
+					"- Only edit inside #selection.",
+					"- Ignore any other buffers and lines outside the selection.",
+				}, "\n")
+
+				chat.ask(prompt, {
+					sticky = { "#buffers" }, -- still let it *see* other buffers, but edits must be selection only
+				})
+			end
+
+			-- Whole-buffer rename (normal mode)
 			local function rename_whole_buffer()
-				local source = capture_source_from_code()
-				chat.ask(RENAME_PROMPT, {
-					selection = function(_)
-						return select_api.buffer(source)
-					end,
-					sticky = { "#buffer:active" },
+				set_source_to_current_window()
+
+				local prompt = table.concat({
+					"#buffer:active",
+					"",
+					RENAME_PROMPT,
+					"",
+					"IMPORTANT:",
+					"- Treat the entire active buffer as the refactor scope.",
+					"- Use other open buffers (#buffers) only for extra context if needed.",
+				}, "\n")
+
+				chat.ask(prompt, {
+					sticky = { "#buffers" },
 				})
 			end
 
@@ -160,17 +244,23 @@ return {
 			-- 5) Keymaps
 			---------------------------------------------------------------------------
 			wk.add({
-				{ "<leader>zz", "<cmd>CopilotChatToggle<CR>", desc = "CopilotChat: Toggle", mode = "n" },
+				-- Toggle chat
+				{
+					"<leader>zz",
+					"<cmd>CopilotChatToggle<CR>",
+					desc = "CopilotChat: Toggle",
+					mode = "n",
+				},
 
-				-- Talk (sel/buffer)
+				-- Talk (visual → selection, normal → buffer)
 				{
 					"<leader>zt",
 					function()
-						ask_vis_or_buf(
+						ask_smart(
 							"Let's discuss this code. Summarize in 3 bullets, list risks, then ask me one clarifying question."
 						)
 					end,
-					desc = "CopilotChat: Talk (visual → selection; normal → buffer)",
+					desc = "CopilotChat: Talk (smart selection/buffer + all buffers)",
 					mode = { "n", "v" },
 				},
 
@@ -178,9 +268,9 @@ return {
 				{
 					"<leader>zes",
 					function()
-						ask_vis_or_buf("Explain senior-level: goals, data flow, invariants, trade-offs, risks.")
+						ask_smart("Explain senior-level: goals, data flow, invariants, trade-offs, risks.")
 					end,
-					desc = "CopilotChat: Explain (Senior, sel/buffer)",
+					desc = "CopilotChat: Explain (Senior, smart selection/buffer + all buffers)",
 					mode = { "n", "v" },
 				},
 
@@ -188,23 +278,41 @@ return {
 				{
 					"<leader>zej",
 					function()
-						ask_vis_or_buf("Explain for a beginner: what it does, step-by-step with a tiny example.")
+						ask_smart("Explain for a beginner: what it does, step-by-step with a tiny example.")
 					end,
-					desc = "CopilotChat: Explain (Junior, sel/buffer)",
+					desc = "CopilotChat: Explain (Junior, smart selection/buffer + all buffers)",
 					mode = { "n", "v" },
 				},
 
-				-- === Rename, per your request ===
+				-- Rename: whole buffer (normal)
 				{
 					"<leader>zr",
 					rename_whole_buffer,
 					desc = "CopilotChat: Rename (Whole Buffer • Clean Code/DDD/Pro C#)",
 					mode = "n",
 				},
+
+				-- Rename: selection only (visual)
 				{
 					"<leader>zr",
 					rename_selection_only,
 					desc = "CopilotChat: Rename (Selection Only • Clean Code/DDD/Pro C#)",
+					mode = "v",
+				},
+
+				-- Refactor: whole buffer (normal)
+				{
+					"<leader>zf",
+					refactor_whole_buffer,
+					desc = "CopilotChat: Refactor (Whole Buffer • Clean Code)",
+					mode = "n",
+				},
+
+				-- Refactor: selection only (visual)
+				{
+					"<leader>zf",
+					refactor_selection_only,
+					desc = "CopilotChat: Refactor (Selection Only • Clean Code)",
 					mode = "v",
 				},
 			})

@@ -20,10 +20,12 @@ return {
 			autotag = {
 				enable = true,
 			},
+
 			sync_install = false, -- do not install parsers synchronously
 
 			ignore_install = { -- ignore these parsers{
 			},
+
 			auto_install = true, -- automatically install missing parsers when entering buffer
 			modules = {}, -- disable modules that are not needed
 
