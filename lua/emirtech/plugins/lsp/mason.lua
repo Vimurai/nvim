@@ -59,7 +59,7 @@ return {
 				"jsonlint", -- for JSON files
 				"clang-format", -- if working with C/C++
 				"csharpier", -- C# formatter
-				-- "eslint_d", -- JavaScript/TypeScript linter
+				"eslint_d", -- JavaScript/TypeScript linter
 			},
 		})
 	end,

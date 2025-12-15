@@ -91,5 +91,38 @@ return {
 				},
 			},
 		})
+
+		vim.lsp.config("eslint", {
+			on_attach = function(client, bufnr)
+				if not client.server_capabilities.codeActionProvider then
+					return
+				end
+
+				vim.api.nvim_create_autocmd("BufWritePre", {
+					buffer = bufnr,
+					callback = function()
+						-- Validate buffer
+						if not vim.api.nvim_buf_is_valid(bufnr) then
+							return
+						end
+
+						-- Request fixAll WITHOUT range params
+						vim.lsp.buf.code_action({
+							apply = true,
+							context = {
+								only = { "source.fixAll.eslint" },
+							},
+						})
+					end,
+				})
+			end,
+
+			settings = {
+				experimental = { useFlatConfig = true },
+				codeActionOnSave = { enable = true, mode = "all" },
+			},
+
+			filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
+		})
 	end,
 }

@@ -6,146 +6,196 @@ return {
 			"williamboman/mason.nvim",
 			"nvim-neotest/nvim-nio",
 			"Cliffback/netcoredbg-macOS-arm64.nvim",
+			"mxsdev/nvim-dap-vscode-js",
+			"folke/which-key.nvim",
+			{
+				"microsoft/vscode-js-debug",
+				version = "1.x",
+				build = "npm i && npm run compile vsDebugServerBundle && mv dist out",
+			},
 		},
 		event = "VeryLazy",
 		config = function()
 			local dap = require("dap")
-			local home = os.getenv("HOME")
-			-- setup netcoredbg adapter
+
+			-----------------------------------------------------------------------
+			-- .NET (C#)
+			-----------------------------------------------------------------------
 			require("netcoredbg-macOS-arm64").setup(dap)
+
+			require("dap-vscode-js").setup({
+				debugger_path = vim.fn.stdpath("data") .. "/lazy/vscode-js-debug",
+				adapters = { "pwa-node", "pwa-chrome", "pwa-msedge", "node-terminal", "pwa-extensionHost" },
+			})
 
 			dap.configurations.cs = {
 				{
 					type = "coreclr",
-					name = "Launch .NET Project",
+					name = "Launch .NET",
 					request = "launch",
 					program = function()
-						local fn = vim.fn
-						local projectName = fn.fnamemodify(fn.getcwd(), ":t")
-						return fn.getcwd() .. "/UmmahConnect.API/bin/Debug/net9.0/" .. projectName .. ".API.dll"
+						return vim.fn.glob(vim.fn.getcwd() .. "/bin/Debug/net9.0/*.dll")
 					end,
-					stopAtEntry = false,
-					env = {
-						ASPNETCORE_ENVIRONMENT = "Development",
-					},
+					env = { ASPNETCORE_ENVIRONMENT = "Development" },
 				},
 				{
 					type = "coreclr",
-					name = "Attach to .NET Process",
+					name = "Attach",
 					request = "attach",
 					processId = require("dap.utils").pick_process,
-					cwd = vim.fn.getcwd(),
-					stopAtEntry = false,
 				},
 			}
 
-			-- Node.js
-			dap.adapters.node2 = {
-				type = "executable",
-				command = "node",
-				args = {
-					home .. "/.local/share/nvim/mason/packages/node-debug2-adapter/out/src/nodeDebug.js",
-					"--stdio",
-				},
-			}
-			dap.configurations.javascript = {
-				{
-					name = "Launch JS (Node)",
-					type = "node2",
-					request = "launch",
-					program = "${file}",
-					cwd = vim.fn.getcwd(),
-					sourceMaps = true,
-					protocol = "inspector",
-					console = "integratedTerminal",
-				},
-			}
-			dap.configurations.typescript = {
-				{
-					name = "Launch TS (ts-node)",
-					type = "node2",
-					request = "launch",
-					program = "${file}",
-					cwd = vim.fn.getcwd(),
-					sourceMaps = true,
-					protocol = "inspector",
-					runtimeExecutable = "ts-node",
-				},
-			}
+			for _, adapterType in ipairs({ "node", "chrome", "msedge" }) do
+				local pwaType = "pwa-" .. adapterType
 
-			dap.defaults.fallback.terminal_win_cmd = "tabnew"
+				dap.adapters[pwaType] = {
+					type = "server",
+					host = "localhost",
+					port = "${port}",
+					executable = {
+						command = "node",
+						args = {
+							vim.fn.stdpath("data") .. "/mason/packages/js-debug-adapter/js-debug/src/dapDebugServer.js",
+							"${port}",
+						},
+					},
+				}
 
-			-- keymaps: <leader>d{c|s|n|o|b|r|l}
+				-- this allow us to handle launch.json configurations
+				-- which specify type as "node" or "chrome" or "msedge"
+				dap.adapters[adapterType] = function(cb, config)
+					local nativeAdapter = dap.adapters[pwaType]
+
+					config.type = pwaType
+
+					if type(nativeAdapter) == "function" then
+						nativeAdapter(cb, config)
+					else
+						cb(nativeAdapter)
+					end
+				end
+			end
+
+			local enter_launch_url = function()
+				local co = coroutine.running()
+				return coroutine.create(function()
+					vim.ui.input({ prompt = "Enter URL: ", default = "http://localhost:" }, function(url)
+						if url == nil or url == "" then
+							return
+						else
+							coroutine.resume(co, url)
+						end
+					end)
+				end)
+			end
+
+			for _, language in ipairs({ "typescript", "javascript", "typescriptreact", "javascriptreact", "vue" }) do
+				dap.configurations[language] = {
+					{
+						type = "pwa-node",
+						request = "launch",
+						name = "Launch file using Node.js (nvim-dap)",
+						program = "${file}",
+						cwd = "${workspaceFolder}",
+					},
+					{
+						type = "pwa-node",
+						request = "attach",
+						name = "Attach to process using Node.js (nvim-dap)",
+						processId = require("dap.utils").pick_process,
+						cwd = "${workspaceFolder}",
+					},
+					-- requires ts-node to be installed globally or locally
+					{
+						type = "pwa-node",
+						request = "launch",
+						name = "Launch file using Node.js with ts-node/register (nvim-dap)",
+						program = "${file}",
+						cwd = "${workspaceFolder}",
+						runtimeArgs = { "-r", "ts-node/register" },
+					},
+					{
+						type = "pwa-chrome",
+						request = "launch",
+						name = "Launch Chrome (nvim-dap)",
+						url = enter_launch_url,
+						webRoot = "${workspaceFolder}",
+						sourceMaps = true,
+					},
+					{
+						type = "pwa-chrome",
+						request = "attach",
+						name = "Attach DAP to Running Chrome",
+						port = 9222,
+						webRoot = "${workspaceFolder}",
+						sourceMaps = true,
+					},
+					{
+						type = "pwa-msedge",
+						request = "launch",
+						name = "Launch Edge (nvim-dap)",
+						url = enter_launch_url,
+						webRoot = "${workspaceFolder}",
+						sourceMaps = true,
+					},
+				}
+			end
+
+			-----------------------------------------------------------------------
+			-- Keymaps
+			-----------------------------------------------------------------------
 			local map = vim.keymap.set
-			map("n", "<leader>dc", dap.continue, { desc = "DAP Continue" })
-			map("n", "<leader>db", dap.toggle_breakpoint, { desc = "DAP Toggle Breakpoint" })
-			map("n", "<leader>ds", dap.step_over, { desc = "DAP Step Over" })
-			map("n", "<leader>dn", dap.step_into, { desc = "DAP Step Into" })
-			map("n", "<leader>do", dap.step_out, { desc = "DAP Step Out" })
-			map("n", "<leader>dr", dap.repl.open, { desc = "DAP Open REPL" })
-			map("n", "<leader>dl", dap.run_last, { desc = "DAP Run Last" })
+
+			map("n", "<leader>dc", dap.continue, { desc = "Continue" })
+			map("n", "<leader>db", dap.toggle_breakpoint, { desc = "Breakpoint" })
+			map("n", "<leader>ds", dap.step_over, { desc = "Step Over" })
+			map("n", "<leader>dn", dap.step_into, { desc = "Step Into" })
+			map("n", "<leader>do", dap.step_out, { desc = "Step Out" })
+			map("n", "<leader>dr", dap.repl.open, { desc = "REPL" })
+			map("n", "<leader>dl", dap.run_last, { desc = "Run Last" })
 			map("n", "<leader>dt", function()
 				require("dapui").toggle()
-			end, { desc = "DAP Toggle UI" })
+			end, { desc = "Toggle UI" })
 		end,
 	},
 
+	-----------------------------------------------------------------------
+	-- DAP UI
+	-----------------------------------------------------------------------
 	{
 		"rcarriga/nvim-dap-ui",
 		dependencies = { "mfussenegger/nvim-dap" },
 		event = "VeryLazy",
 		config = function()
 			local dap, dapui = require("dap"), require("dapui")
+
 			dapui.setup({
-				icons = { expanded = "▾", collapsed = "▸", current_frame = "▸" },
-				mappings = {
-					expand = { "<CR>", "<2-LeftMouse>" },
-					open = "o",
-					remove = "d",
-					edit = "e",
-					repl = "r",
-					toggle = "t",
-				},
 				layouts = {
 					{
-						elements = { { id = "scopes", size = 0.25 }, "breakpoints", "stacks", "watches" },
+						elements = { "scopes", "breakpoints", "stacks", "watches" },
 						size = 40,
 						position = "left",
 					},
-					{ elements = { "repl", "console" }, size = 0.25, position = "bottom" },
-				},
-				controls = {
-					enabled = true,
-					element = "repl",
-					icons = {
-						pause = "⏸",
-						play = "▶",
-						step_into = "⏎",
-						step_over = "⏭",
-						step_out = "⏮",
-						step_back = "◀",
-						run_last = "↻",
-						terminate = "⏹",
+					{
+						elements = { "repl", "console" },
+						size = 0.25,
+						position = "bottom",
 					},
 				},
-				floating = {
-					border = "rounded",
-					mappings = { close = { "q", "<Esc>" } },
-				},
-				windows = { indent = 1 },
 			})
 
-			dap.listeners.after.event_initialized["dapui"] = dapui.open
-			dap.listeners.before.event_terminated["dapui"] = dapui.close
-			dap.listeners.before.event_exited["dapui"] = dapui.close
+			dap.listeners.after.event_initialized["dapui_config"] = function()
+				dapui.open()
+			end
+			dap.listeners.before.event_terminated["dapui_config"] = function()
+				dapui.close()
+			end
+			dap.listeners.before.event_exited["dapui_config"] = function()
+				dapui.close()
+			end
 
-			-- macOS-style breakpoint sign
-			vim.fn.sign_define("DapBreakpoint", {
-				text = "●",
-				texthl = "Error",
-				linehl = "",
-				numhl = "",
-			})
+			vim.fn.sign_define("DapBreakpoint", { text = "●", texthl = "ErrorMsg" })
 		end,
 	},
 }

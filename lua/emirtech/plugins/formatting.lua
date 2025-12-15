@@ -47,6 +47,7 @@ return {
 						"$FILENAME",
 					},
 					stdin = true,
+					format_on_save = false,
 					require_cwd = false,
 				},
 			},
