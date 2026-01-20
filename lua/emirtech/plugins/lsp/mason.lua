@@ -15,6 +15,10 @@ return {
 
 		-- enable mason and configure icons
 		mason.setup({
+			registries = {
+				"github:Crashdummyy/mason-registry",
+				"github:mason-org/mason-registry",
+			},
 			ui = {
 				icons = {
 					package_installed = "✓",
@@ -39,7 +43,7 @@ return {
 				"prismals",
 				"pyright",
 				"vue_ls", -- Vue.js LSP
-				"csharp_ls", -- c# LSP
+				-- "csharp_ls", -- c# LSP
 				"vtsls",
 				"eslint",
 				"gopls",
