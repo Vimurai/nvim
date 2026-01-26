@@ -34,6 +34,7 @@ return {
 			local capabilities = require("cmp_nvim_lsp").default_capabilities()
 			capabilities.textDocument.completion.completionItem.snippetSupport = true
 			capabilities.offsetEncoding = { "utf-16" }
+			capabilities.textDocument.implementation = { dynamicRegistration = true }
 
 			-- -------------------------
 			-- Helper: razor detection (fix signatureHelp JsonException)
@@ -54,6 +55,34 @@ return {
 					if not client then
 						return
 					end
+
+					-- Autocommand to organize and add missing imports on save (removed: now handled by ESLint LSP or Conform)
+					-- if client.server_capabilities.codeActionProvider then
+					-- 	vim.api.nvim_create_autocmd("BufWritePre", {
+					-- 		buffer = bufnr,
+					-- 		callback = function()
+					-- 			local filetype = vim.bo[bufnr].filetype
+					-- 			if
+					-- 				filetype == "typescript"
+					-- 				or filetype == "javascript"
+					-- 				or filetype == "vue"
+					-- 				or filetype == "javascriptreact"
+					-- 				or filetype == "typescriptreact"
+					-- 			then
+					-- 				vim.lsp.buf.code_action({
+					-- 					bufnr = bufnr,
+					-- 					context = {
+					-- 						only = {
+					-- 							"source.organizeImports",
+					-- 						},
+					-- 						diagnostics = {},
+					-- 					},
+					-- 					apply = true,
+					-- 				})
+					-- 			end
+					-- 		end,
+					-- 	})
+					-- end
 
 					local map = vim.keymap.set
 
@@ -82,7 +111,6 @@ return {
 						desc = "Hover Documentation",
 					})
 
-					-- ✅ Crash-proof: do NOT attach lsp_signature in Razor/Cshtml buffers
 					-- (This avoids the Roslyn/Razor cohost signatureHelp deserialize error.)
 					if not is_razor(bufnr) then
 						local ok, sig = pcall(require, "lsp_signature")
