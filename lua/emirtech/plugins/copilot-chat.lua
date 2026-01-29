@@ -4,10 +4,10 @@ return {
 		dependencies = {
 			{ "nvim-lua/plenary.nvim", branch = "master" },
 			{ "folke/which-key.nvim" },
-			-- pickers you said you use:
-			{ "folke/snacks.nvim" },
-			{ "nvim-telescope/telescope.nvim" },
+			{ "nvim-telescope/telescope.nvim", branch = "0.1.x" },
 			{ "nvim-telescope/telescope-ui-select.nvim" },
+			-- Harpoon is now a dependency for context
+			{ "ThePrimeagen/harpoon" },
 		},
 		lazy = false,
 		build = "make tiktoken",
@@ -57,13 +57,12 @@ return {
 					title = "🤖 CopilotChat",
 				},
 				auto_insert_mode = true,
-				-- we’ll drive context via #buffer / #buffers / #selection in prompts
 			})
 
 			local wk = require("which-key")
 
 			---------------------------------------------------------------------------
-			-- 3) Helpers: source + context (selection vs buffer)
+			-- 3) Helpers: source + Harpoon context
 			---------------------------------------------------------------------------
 			-- Always tell CopilotChat which *code* window is the source
 			local function set_source_to_current_window()
@@ -73,7 +72,6 @@ return {
 
 				-- If we’re accidentally in the chat window, don’t overwrite source
 				if ft ~= "copilot-chat" then
-					-- API is a function, not a method: window.set_source(winnr)
 					pcall(window.set_source, winnr)
 				end
 
@@ -86,71 +84,30 @@ return {
 				return m == "v" or m == "V" or m == "\22" -- charwise, linewise, block
 			end
 
-			-- Helper: get conventionally related files (e.g., for Vue components)
-			-- This will look for files in the same directory with the same base name
-			local function get_related_files(bufnr)
-				local file_path = vim.api.nvim_buf_get_name(bufnr)
-				if file_path == "" then
-					return {}
-				end
-
-				local file_name = vim.fn.fnamemodify(file_path, ":t")         -- e.g., MyComponent.vue
-				local base_name = vim.fn.fnamemodify(file_name, ":r")         -- e.g., MyComponent
-				local dir_name = vim.fn.fnamemodify(file_path, ":h")          -- e.g., /path/to/component/
-
-				if base_name == "" or dir_name == "" then
-					return {}
-				end
-
-				local related_extensions = {
-					-- Common web component relations
-					".vue", ".ts", ".js", ".tsx", ".jsx",
-					".css", ".scss", ".less", ".styl",
-					-- Test files
-					".test.ts", ".test.js", ".spec.ts", ".spec.js",
-				}
-
-				local related_files = {}
-				local glob_pattern = dir_name .. "/" .. base_name .. ".*"
-				
-				-- Use vim.fn.glob to find files matching the pattern
-				local found_files_str = vim.fn.glob(glob_pattern, true, true)
-				local found_files = found_files_str
-
-				for _, found_file_path in ipairs(found_files) do
-					if found_file_path ~= "" and found_file_path ~= file_path then
-						local found_ext = vim.fn.fnamemodify(found_file_path, ":e")
-						-- Check if the found file has one of our "related" extensions
-						for _, ext in ipairs(related_extensions) do
-							if "." .. found_ext == ext then
-								table.insert(related_files, found_file_path)
-								break
-							end
-						end
-					end
-				end
-
-				-- Also consider index files in subdirectories, e.g., 'src/components/MyComponent/index.vue'
-				local potential_subdir = dir_name .. "/" .. base_name
-				if vim.fn.isdirectory(potential_subdir) == 1 then
-					for _, ext in ipairs({".vue", ".ts", ".js", ".tsx", ".jsx"}) do
-						local index_file = potential_subdir .. "/index" .. ext
-						if vim.fn.filereadable(index_file) == 1 then
-							table.insert(related_files, index_file)
-							break
-						end
-					end
-				end
-
-				return related_files
-			end
-
-			-- Ask with smart context:
-			--  - visual → #selection
-			--  - normal → #buffer:active
-			--  - always include #buffers so it knows about all open files
+			-- Ask with Harpoon-based context
 			local function ask_smart(prompt)
 				set_source_to_current_window()
+
+				-- 1. Sync first to ensure internal sticky state matches Harpoon
+				local ok_h, harpoon = pcall(require, "harpoon")
+				local harpoon_buffers = {}
+				if ok_h then
+					for _, item in ipairs(harpoon:list().items) do
+						if item.value and item.value ~= "" then
+							table.insert(harpoon_buffers, "#file:" .. item.value)
+						end
+					end
+				end
+
+				-- 2. Explicitly clear any existing #file sticky items from the active chat
+				-- to prevent accumulation if the events didn't catch everything.
+				if chat.chat and chat.chat.sticky then
+					for i = #chat.chat.sticky, 1, -1 do
+						if chat.chat.sticky[i]:match("^#file:") then
+							table.remove(chat.chat.sticky, i)
+						end
+					end
+				end
 
 				local header
 				if in_visual_mode() then
@@ -159,21 +116,55 @@ return {
 					header = "#buffer:active\n"
 				end
 
-				local bufnr = vim.api.nvim_get_current_buf()
-				local additional_sticky_buffers = {}
-				for _, related_file_path in ipairs(get_related_files(bufnr)) do
-					-- Use full path for #buffer: to ensure uniqueness
-					table.insert(additional_sticky_buffers, "#buffer:" .. related_file_path)
-				end
-
 				chat.ask(header .. prompt, {
-					-- Make it aware of all open buffers by default, plus explicitly related files
-					sticky = vim.list_extend({ "#buffers" }, additional_sticky_buffers),
+					sticky = harpoon_buffers,
 				})
 			end
 
 			---------------------------------------------------------------------------
-			-- 4) Rename prompt (your DDD / Clean Code rules)
+			-- 4) Harpoon → CopilotChat Sync (Auto-remove)
+			---------------------------------------------------------------------------
+			local ok_h, h = pcall(require, "harpoon")
+			if ok_h then
+				local function sync_harpoon_to_copilot()
+					local ok_c, c = pcall(require, "CopilotChat")
+					if not ok_c then
+						return
+					end
+
+					local active_chat = c.chat
+					if not active_chat then
+						return
+					end
+
+					-- Ensure sticky table exists
+					active_chat.sticky = active_chat.sticky or {}
+
+					-- 1. Remove all existing #file: sticky items
+					for i = #active_chat.sticky, 1, -1 do
+						if active_chat.sticky[i]:match("^#file:") then
+							table.remove(active_chat.sticky, i)
+						end
+					end
+
+					-- 2. Re-add from Harpoon list
+					for _, item in ipairs(h:list().items) do
+						if item.value and item.value ~= "" then
+							table.insert(active_chat.sticky, "#file:" .. item.value)
+						end
+					end
+				end
+
+				h:extend({
+					REMOVE = sync_harpoon_to_copilot,
+					CLEAR = sync_harpoon_to_copilot,
+					ADD = sync_harpoon_to_copilot,
+					UI_CLOSE = sync_harpoon_to_copilot,
+				})
+			end
+
+			---------------------------------------------------------------------------
+			-- 5) Rename prompt (your DDD / Clean Code rules)
 			---------------------------------------------------------------------------
 			local RENAME_PROMPT = table.concat({
 				"Refactor names to follow professional standards:",
@@ -225,12 +216,7 @@ return {
 					return
 				end
 
-				set_source_to_current_window()
-
-				-- #selection = only the visually selected code
 				local prompt = table.concat({
-					"#selection",
-					"",
 					REFACTOR_PROMPT,
 					"",
 					"IMPORTANT:",
@@ -238,28 +224,19 @@ return {
 					"- Ignore any other buffers and lines outside the selection.",
 				}, "\n")
 
-				chat.ask(prompt, {
-					sticky = { "#buffers" }, -- still let it *see* other buffers, but edits must be selection only
-				})
+				ask_smart(prompt)
 			end
 
 			-- Whole-buffer refactor (normal mode)
 			local function refactor_whole_buffer()
-				set_source_to_current_window()
-
 				local prompt = table.concat({
-					"#buffer:active",
-					"",
 					REFACTOR_PROMPT,
 					"",
 					"IMPORTANT:",
 					"- Treat the entire active buffer as the refactor scope.",
-					"- Use other open buffers (#buffers) only for extra context if needed.",
 				}, "\n")
 
-				chat.ask(prompt, {
-					sticky = { "#buffers" },
-				})
+				ask_smart(prompt)
 			end
 
 			-- Selection-only rename (visual mode)
@@ -269,12 +246,7 @@ return {
 					return
 				end
 
-				set_source_to_current_window()
-
-				-- #selection = only the visually selected code
 				local prompt = table.concat({
-					"#selection",
-					"",
 					RENAME_PROMPT,
 					"",
 					"IMPORTANT:",
@@ -282,28 +254,19 @@ return {
 					"- Ignore any other buffers and lines outside the selection.",
 				}, "\n")
 
-				chat.ask(prompt, {
-					sticky = { "#buffers" }, -- still let it *see* other buffers, but edits must be selection only
-				})
+				ask_smart(prompt)
 			end
 
 			-- Whole-buffer rename (normal mode)
 			local function rename_whole_buffer()
-				set_source_to_current_window()
-
 				local prompt = table.concat({
-					"#buffer:active",
-					"",
 					RENAME_PROMPT,
 					"",
 					"IMPORTANT:",
 					"- Treat the entire active buffer as the refactor scope.",
-					"- Use other open buffers (#buffers) only for extra context if needed.",
 				}, "\n")
 
-				chat.ask(prompt, {
-					sticky = { "#buffers" },
-				})
+				ask_smart(prompt)
 			end
 
 			---------------------------------------------------------------------------
@@ -326,8 +289,8 @@ return {
 							"Let's discuss this code. Summarize in 3 bullets, list risks, then ask me one clarifying question."
 						)
 					end,
-					desc = "CopilotChat: Talk (smart selection/buffer + all buffers)",
-					mode = { "n", "v" },
+				desc = "CopilotChat: Talk (smart selection/buffer + harpooned files)",
+				mode = { "n", "v" },
 				},
 
 				-- Explain (Senior)
@@ -336,8 +299,8 @@ return {
 					function()
 						ask_smart("Explain senior-level: goals, data flow, invariants, trade-offs, risks.")
 					end,
-					desc = "CopilotChat: Explain (Senior, smart selection/buffer + all buffers)",
-					mode = { "n", "v" },
+				desc = "CopilotChat: Explain (Senior, smart selection/buffer + harpooned files)",
+				mode = { "n", "v" },
 				},
 
 				-- Explain (Junior)
@@ -346,62 +309,62 @@ return {
 					function()
 						ask_smart("Explain for a beginner: what it does, step-by-step with a tiny example.")
 					end,
-					desc = "CopilotChat: Explain (Junior, smart selection/buffer + all buffers)",
-					mode = { "n", "v" },
+				desc = "CopilotChat: Explain (Junior, smart selection/buffer + harpooned files)",
+				mode = { "n", "v" },
 				},
 
 				-- Rename: whole buffer (normal)
 				{
 					"<leader>zr",
 					rename_whole_buffer,
-					desc = "CopilotChat: Rename (Whole Buffer • Clean Code/DDD/Pro C#)",
-					mode = "n",
+				desc = "CopilotChat: Rename (Whole Buffer • Clean Code/DDD/Pro C#)",
+				mode = "n",
 				},
 
 				-- Rename: selection only (visual)
 				{
 					"<leader>zr",
 					rename_selection_only,
-					desc = "CopilotChat: Rename (Selection Only • Clean Code/DDD/Pro C#)",
-					mode = "v",
+				desc = "CopilotChat: Rename (Selection Only • Clean Code/DDD/Pro C#)",
+				mode = "v",
 				},
 
 				-- Refactor: whole buffer (normal)
 				{
 					"<leader>zf",
 					refactor_whole_buffer,
-					desc = "CopilotChat: Refactor (Whole Buffer • Clean Code)",
-					mode = "n",
+				desc = "CopilotChat: Refactor (Whole Buffer • Clean Code)",
+				mode = "n",
 				},
 
 				-- Refactor: selection only (visual)
 				{
 					"<leader>zf",
 					refactor_selection_only,
-					desc = "CopilotChat: Refactor (Selection Only • Clean Code)",
-					mode = "v",
+				desc = "CopilotChat: Refactor (Selection Only • Clean Code)",
+				mode = "v",
 				},
 
-				-- Generate Unit Tests (smart selection/buffer + all buffers + related files)
+				-- Generate Unit Tests (smart selection/buffer + harpooned files)
 				{
 					"<leader>zgt",
 					function()
 						ask_smart("Generate comprehensive unit tests for the active code. Focus on edge cases and common scenarios.")
 					end,
-					desc = "CopilotChat: Generate Unit Tests",
-					mode = { "n", "v" },
+				desc = "CopilotChat: Generate Unit Tests",
+				mode = { "n", "v" },
 				},
 
-				-- Suggest Improvements (Refactor, Debug, Maintain) (smart selection/buffer + all buffers + related files)
+				-- Suggest Improvements (Refactor, Debug, Maintain) (smart selection/buffer + harpooned files)
 				{
 					"<leader>zsi",
 					function()
 						ask_smart("Review the active code for refactoring opportunities, potential bugs, and areas for improved maintainability. Provide specific, actionable suggestions.")
 					end,
-					desc = "CopilotChat: Suggest Improvements",
-					mode = { "n", "v" },
+				desc = "CopilotChat: Suggest Improvements",
+				mode = { "n", "v" },
 				},
 			})
-		end,
-	},
+		end, -- closes config = function()
+	}, -- closes "CopilotC-Nvim/CopilotChat.nvim",
 }

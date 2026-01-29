@@ -4,186 +4,140 @@ return {
 		dependencies = {
 			"rcarriga/nvim-dap-ui",
 			"williamboman/mason.nvim",
+			"jay-babu/mason-nvim-dap.nvim",
 			"nvim-neotest/nvim-nio",
-			"Cliffback/netcoredbg-macOS-arm64.nvim",
-			"mxsdev/nvim-dap-vscode-js",
 			"folke/which-key.nvim",
-			{
-				"microsoft/vscode-js-debug",
-				version = "1.x",
-				build = "npm i && npm run compile vsDebugServerBundle && mv dist out",
-			},
+			-- Critical for M1/M2/M3 chips (Apple Silicon)
+			"Cliffback/netcoredbg-macOS-arm64.nvim",
 		},
 		event = "VeryLazy",
 		config = function()
 			local dap = require("dap")
+			local dapui = require("dapui")
 
-			-----------------------------------------------------------------------
-			-- .NET (C#)
-			-----------------------------------------------------------------------
+			-- Automatically handle netcoredbg for Apple Silicon
 			require("netcoredbg-macOS-arm64").setup(dap)
 
-			require("dap-vscode-js").setup({
-				debugger_path = vim.fn.stdpath("data") .. "/lazy/vscode-js-debug",
-				adapters = { "pwa-node", "pwa-chrome", "pwa-msedge", "node-terminal", "pwa-extensionHost" },
+			require("mason-nvim-dap").setup({
+				ensure_installed = { "js-debug-adapter" },
+				automatic_installation = true,
+				handlers = {},
 			})
+
+			-----------------------------------------------------------------------
+			-- Adapters
+			-----------------------------------------------------------------------
+
+			-- JS/TS Adapter (pwa-node)
+			dap.adapters["pwa-node"] = {
+				type = "server",
+				host = "localhost",
+				port = "${port}",
+				executable = {
+					command = "node",
+					args = {
+						vim.fn.stdpath("data") .. "/mason/packages/js-debug-adapter/js-debug/src/dapDebugServer.js",
+						"${port}",
+					},
+				},
+			}
+
+			-----------------------------------------------------------------------
+			-- Helper Functions for .NET
+			-----------------------------------------------------------------------
+
+			local function build_project()
+				local cmd = "dotnet build -c Debug"
+				print("Building: " .. cmd)
+				local output = vim.fn.system(cmd)
+				print(output)
+			end
+
+			local function get_dll_path()
+				local cwd = vim.fn.getcwd()
+				-- Search for the executable-looking DLL with a runtimeconfig
+				local config_files = vim.fn.glob(cwd .. "/bin/Debug/**/*.runtimeconfig.json", false, true)
+				local executable_dlls = {}
+				
+				for _, config in ipairs(config_files) do
+					local dll = config:gsub("%.runtimeconfig%.json$", ".dll")
+					if vim.fn.filereadable(dll) == 1 then
+						-- Filter out common framework DLLs
+						if not string.match(dll, "Microsoft%") and not string.match(dll, "System%") then
+							table.insert(executable_dlls, dll)
+						end
+					end
+				end
+
+				if #executable_dlls == 1 then
+					return executable_dlls[1]
+				elseif #executable_dlls > 1 then
+					return vim.fn.input("Select DLL: ", executable_dlls[1], "file")
+				else
+					return vim.fn.input("Path to DLL: ", cwd .. "/bin/Debug/", "file")
+				end
+			end
+
+			-----------------------------------------------------------------------
+			-- Configurations
+			-----------------------------------------------------------------------
 
 			dap.configurations.cs = {
 				{
 					type = "coreclr",
-					name = "Launch .NET",
+					name = "Launch .NET App (M1/M2 Native)",
 					request = "launch",
 					program = function()
-						return vim.fn.glob(vim.fn.getcwd() .. "/bin/Debug/net9.0/*.dll")
+						if vim.fn.confirm("Build project?", "&Yes\n&No", 1) == 1 then
+							build_project()
+						end
+						return get_dll_path()
 					end,
-					env = { ASPNETCORE_ENVIRONMENT = "Development" },
+				cwd = "${workspaceFolder}",
+				stopAtEntry = false,
+				console = "integratedTerminal",
+				env = {
+					ASPNETCORE_ENVIRONMENT = "Development",
+					-- Ensure dotnet tool can find the native libraries
+					DOTNET_ROOT = "/opt/homebrew/bin/dotnet",
+				},
 				},
 				{
 					type = "coreclr",
-					name = "Attach",
+					name = "Attach to Process",
 					request = "attach",
 					processId = require("dap.utils").pick_process,
 				},
 			}
 
-			for _, adapterType in ipairs({ "node", "chrome", "msedge" }) do
-				local pwaType = "pwa-" .. adapterType
+			dap.configurations.razor = dap.configurations.cs
 
-				dap.adapters[pwaType] = {
-					type = "server",
-					host = "localhost",
-					port = "${port}",
-					executable = {
-						command = "node",
-						args = {
-							vim.fn.stdpath("data") .. "/mason/packages/js-debug-adapter/js-debug/src/dapDebugServer.js",
-							"${port}",
-						},
-					},
-				}
-
-				-- this allow us to handle launch.json configurations
-				-- which specify type as "node" or "chrome" or "msedge"
-				dap.adapters[adapterType] = function(cb, config)
-					local nativeAdapter = dap.adapters[pwaType]
-
-					config.type = pwaType
-
-					if type(nativeAdapter) == "function" then
-						nativeAdapter(cb, config)
-					else
-						cb(nativeAdapter)
-					end
-				end
-			end
-
-			local enter_launch_url = function()
-				local co = coroutine.running()
-				return coroutine.create(function()
-					vim.ui.input({ prompt = "Enter URL: ", default = "http://localhost:" }, function(url)
-						if url == nil or url == "" then
-							return
-						else
-							coroutine.resume(co, url)
-						end
-					end)
-				end)
-			end
-
-			for _, language in ipairs({ "typescript", "javascript", "typescriptreact", "javascriptreact", "vue" }) do
-				dap.configurations[language] = {
+			-- JS/TS configurations
+			local js_langs = { "typescript", "javascript", "typescriptreact", "javascriptreact", "vue" }
+			for _, lang in ipairs(js_langs) do
+				dap.configurations[lang] = {
 					{
 						type = "pwa-node",
 						request = "launch",
-						name = "Launch file using Node.js (nvim-dap)",
+						name = "Launch Current File (Node)",
 						program = "${file}",
 						cwd = "${workspaceFolder}",
 					},
 					{
 						type = "pwa-node",
 						request = "attach",
-						name = "Attach to process using Node.js (nvim-dap)",
+						name = "Attach to Process",
 						processId = require("dap.utils").pick_process,
 						cwd = "${workspaceFolder}",
-					},
-					-- requires ts-node to be installed globally or locally
-					{
-						type = "pwa-node",
-						request = "launch",
-						name = "Launch file using Node.js with ts-node/register (nvim-dap)",
-						program = "${file}",
-						cwd = "${workspaceFolder}",
-						runtimeArgs = { "-r", "ts-node/register" },
-					},
-					{
-						type = "pwa-chrome",
-						request = "launch",
-						name = "Launch Chrome (nvim-dap)",
-						url = enter_launch_url,
-						webRoot = "${workspaceFolder}",
-						sourceMaps = true,
-					},
-					{
-						type = "pwa-chrome",
-						request = "attach",
-						name = "Attach DAP to Running Chrome",
-						port = 9222,
-						webRoot = "${workspaceFolder}",
-						sourceMaps = true,
-					},
-					{
-						type = "pwa-msedge",
-						request = "launch",
-						name = "Launch Edge (nvim-dap)",
-						url = enter_launch_url,
-						webRoot = "${workspaceFolder}",
-						sourceMaps = true,
-					},
+					}
 				}
 			end
 
 			-----------------------------------------------------------------------
-			-- Keymaps
+			-- UI & Keymaps
 			-----------------------------------------------------------------------
-			local map = vim.keymap.set
 
-			map("n", "<leader>dc", dap.continue, { desc = "Continue" })
-			map("n", "<leader>db", dap.toggle_breakpoint, { desc = "Breakpoint" })
-			map("n", "<leader>ds", dap.step_over, { desc = "Step Over" })
-			map("n", "<leader>dn", dap.step_into, { desc = "Step Into" })
-			map("n", "<leader>do", dap.step_out, { desc = "Step Out" })
-			map("n", "<leader>dr", dap.repl.open, { desc = "REPL" })
-			map("n", "<leader>dl", dap.run_last, { desc = "Run Last" })
-			map("n", "<leader>dt", function()
-				require("dapui").toggle()
-			end, { desc = "Toggle UI" })
-		end,
-	},
-
-	-----------------------------------------------------------------------
-	-- DAP UI
-	-----------------------------------------------------------------------
-	{
-		"rcarriga/nvim-dap-ui",
-		dependencies = { "mfussenegger/nvim-dap" },
-		event = "VeryLazy",
-		config = function()
-			local dap, dapui = require("dap"), require("dapui")
-
-			dapui.setup({
-				layouts = {
-					{
-						elements = { "scopes", "breakpoints", "stacks", "watches" },
-						size = 40,
-						position = "left",
-					},
-					{
-						elements = { "repl", "console" },
-						size = 0.25,
-						position = "bottom",
-					},
-				},
-			})
+			dapui.setup()
 
 			dap.listeners.after.event_initialized["dapui_config"] = function()
 				dapui.open()
@@ -194,6 +148,17 @@ return {
 			dap.listeners.before.event_exited["dapui_config"] = function()
 				dapui.close()
 			end
+
+			local map = vim.keymap.set
+			map("n", "<leader>dc", dap.continue, { desc = "DAP: Continue/Start" })
+			map("n", "<leader>db", dap.toggle_breakpoint, { desc = "DAP: Toggle Breakpoint" })
+			map("n", "<leader>ds", dap.step_over, { desc = "DAP: Step Over" })
+			map("n", "<leader>di", dap.step_into, { desc = "DAP: Step Into" })
+			map("n", "<leader>do", dap.step_out, { desc = "DAP: Step Out" })
+			map("n", "<leader>dr", dap.repl.open, { desc = "DAP: Open REPL" })
+			map("n", "<leader>dl", dap.run_last, { desc = "DAP: Run Last" })
+			map("n", "<leader>dt", dapui.toggle, { desc = "DAP: Toggle UI" })
+			map("n", "<leader>dx", dap.terminate, { desc = "DAP: Terminate" })
 
 			vim.fn.sign_define("DapBreakpoint", { text = "●", texthl = "ErrorMsg" })
 		end,
