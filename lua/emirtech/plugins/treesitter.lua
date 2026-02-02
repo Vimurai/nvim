@@ -23,8 +23,7 @@ return {
 
 			sync_install = false, -- do not install parsers synchronously
 
-			ignore_install = { -- ignore these parsers{
-			},
+			ignore_install = {},
 
 			auto_install = true, -- automatically install missing parsers when entering buffer
 			modules = {}, -- disable modules that are not needed

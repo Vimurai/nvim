@@ -64,6 +64,7 @@ return {
 				"clang-format", -- if working with C/C++
 				"csharpier", -- C# formatter
 				"eslint_d", -- JavaScript/TypeScript linter
+				"htmlbeautifier", -- Razor/HTML formatter
 			},
 		})
 	end,

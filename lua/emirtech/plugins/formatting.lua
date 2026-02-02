@@ -25,20 +25,18 @@ return {
 				vue = { "prettier" }, -- Added Vue formatting support
 				go = { "gofmt", "gofmt" }, -- Added Go formatting support
 				cs = { "csharpier" },
-				-- razor/cshtml: don't run csharpier (it will error)
-				-- let LSP handle it manually, or skip formatting
-				razor = {},
-				cshtml = {},
+				-- razor: current csharpier doesn't support razor, fallback to LSP formatting
+				razor = { "lsp" },
 			},
 			format_on_save = function(bufnr)
 				local ft = vim.bo[bufnr].filetype
 
-				-- ✅ Never auto-format Razor/Cshtml on save (avoids Roslyn timeouts + csharpier errors)
-				if ft == "razor" or ft == "cshtml" then
+				-- ✅ Skip auto-format for Razor on save
+				if ft == "razor" then
 					return
 				end
 
-				-- ✅ For C#, use csharpier (no LSP)
+				-- ✅ For C#: use csharpier (no LSP)
 				if ft == "cs" then
 					return { lsp_format = "never", timeout_ms = 5000 }
 				end
@@ -49,7 +47,7 @@ return {
 			formatters = {
 				csharpier = {
 					command = vim.fn.expand("~/.dotnet/tools/csharpier"),
-					args = { "format", "--write-stdout" },
+					args = { "format", "--write-stdout", "--log-level", "None" },
 					to_stdin = true,
 				},
 				prettier = {

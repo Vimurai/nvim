@@ -31,13 +31,20 @@ return {
 			yaml = { "yamllint" },
 
 			-- C# (.NET):
-			-- For C#, many diagnostics come from the Roslyn LSP.
-			-- External CLI linters for C# are less common than for JS/Python,
-			-- but you could add something like `dotnet format`'s analysis output
-			-- if there was a way to integrate it as a linter, or a dedicated
-			-- C# linter if one exists (e.g., dotnet-format can check style).
-			-- For now, relying on Roslyn LSP for C# diagnostics is typical.
-			cs = {}, -- Placeholder for potential future C# specific linters
+			cs = { "dotnet-format" },
+			razor = { "dotnet-format" },
+		}
+
+		lint.linters["dotnet-format"] = {
+			cmd = "dotnet",
+			args = { "format", "whitespace", "--verify-no-changes" },
+			stdin = false,
+			stream = "stdout",
+			ignore_exitcode = true,
+			parser = require("lint.parser").from_pattern(
+				[[(%f[%w]%w+%.%w+)%((%d+),(%d+)%): (%w+) (%w%d+): (.*)]],
+				{ "file", "lnum", "col", "severity", "code", "message" }
+			),
 		}
 
 		-- Optional: Configure how diagnostics are displayed (similar to LSP diagnostics)

@@ -109,3 +109,11 @@ vim.api.nvim_create_autocmd("SwapExists", {
 		vim.v.swapchoice = "d" -- always delete
 	end,
 })
+
+-- Custom filetype detection
+vim.filetype.add({
+	extension = {
+		razor = "razor",
+		cshtml = "razor",
+	},
+})

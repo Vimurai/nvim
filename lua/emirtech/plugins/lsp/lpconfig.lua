@@ -40,8 +40,7 @@ return {
 			-- Helper: razor detection (fix signatureHelp JsonException)
 			-- -------------------------
 			local function is_razor(bufnr)
-				local ft = vim.bo[bufnr].filetype
-				return ft == "razor" or ft == "cshtml"
+				return vim.bo[bufnr].filetype == "razor"
 			end
 
 			-- -------------------------
@@ -55,34 +54,6 @@ return {
 					if not client then
 						return
 					end
-
-					-- Autocommand to organize and add missing imports on save (removed: now handled by ESLint LSP or Conform)
-					-- if client.server_capabilities.codeActionProvider then
-					-- 	vim.api.nvim_create_autocmd("BufWritePre", {
-					-- 		buffer = bufnr,
-					-- 		callback = function()
-					-- 			local filetype = vim.bo[bufnr].filetype
-					-- 			if
-					-- 				filetype == "typescript"
-					-- 				or filetype == "javascript"
-					-- 				or filetype == "vue"
-					-- 				or filetype == "javascriptreact"
-					-- 				or filetype == "typescriptreact"
-					-- 			then
-					-- 				vim.lsp.buf.code_action({
-					-- 					bufnr = bufnr,
-					-- 					context = {
-					-- 						only = {
-					-- 							"source.organizeImports",
-					-- 						},
-					-- 						diagnostics = {},
-					-- 					},
-					-- 					apply = true,
-					-- 				})
-					-- 			end
-					-- 		end,
-					-- 	})
-					-- end
 
 					local map = vim.keymap.set
 
@@ -120,7 +91,7 @@ return {
 								floating_window = true,
 							}, bufnr)
 						end
-					else
+					elseif client.server_capabilities and client.server_capabilities.signatureHelpProvider then
 						-- extra safety: prevent signature requests from this client in razor buffers
 						client.server_capabilities.signatureHelpProvider = nil
 					end
@@ -214,6 +185,4 @@ return {
 			vim.lsp.enable({ "lua_ls", "eslint", "vtsls", "vue_ls" })
 		end,
 	},
-
-	vim.lsp.config("roslyn", {}),
 }
