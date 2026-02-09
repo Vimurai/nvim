@@ -1,0 +1,323 @@
+// VSCode Keybindings to complement vscode-settings.json
+// These are non-Vim keybindings that enhance the workflow
+// Copy to: ~/Library/Application Support/Code/User/keybindings.json
+[
+  // ═══════════════════════════════════════════════════════════════════════════
+  // QUICK NAVIGATION (Cmd-based, macOS friendly)
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    "key": "cmd+shift+e",
+    "command": "workbench.view.explorer"
+  },
+  {
+    "key": "cmd+shift+g",
+    "command": "workbench.view.scm"
+  },
+  {
+    "key": "cmd+shift+d",
+    "command": "workbench.view.debug"
+  },
+  {
+    "key": "cmd+shift+x",
+    "command": "workbench.view.extensions"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TERMINAL (matching <leader>st)
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    "key": "ctrl+`",
+    "command": "workbench.action.terminal.toggleTerminal"
+  },
+  {
+    "key": "ctrl+shift+`",
+    "command": "workbench.action.terminal.new"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SIDEBAR & PANELS
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    "key": "cmd+b",
+    "command": "workbench.action.toggleSidebarVisibility"
+  },
+  {
+    "key": "cmd+j",
+    "command": "workbench.action.togglePanel"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EDITOR SPLITS (matching <leader>sv, <leader>sh)
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    "key": "cmd+\\",
+    "command": "workbench.action.splitEditor"
+  },
+  {
+    "key": "cmd+shift+\\",
+    "command": "workbench.action.splitEditorDown"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WINDOW FOCUS (Alt+hjkl for quick switching)
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    "key": "alt+h",
+    "command": "workbench.action.focusLeftGroup"
+  },
+  {
+    "key": "alt+l",
+    "command": "workbench.action.focusRightGroup"
+  },
+  {
+    "key": "alt+j",
+    "command": "workbench.action.focusBelowGroup"
+  },
+  {
+    "key": "alt+k",
+    "command": "workbench.action.focusAboveGroup"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TAB NAVIGATION
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    "key": "alt+]",
+    "command": "workbench.action.nextEditor"
+  },
+  {
+    "key": "alt+[",
+    "command": "workbench.action.previousEditor"
+  },
+  {
+    "key": "cmd+w",
+    "command": "workbench.action.closeActiveEditor"
+  },
+  {
+    "key": "cmd+shift+w",
+    "command": "workbench.action.closeAllEditors"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // COPILOT CHAT (matching <leader>z* bindings)
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    "key": "cmd+shift+i",
+    "command": "workbench.panel.chat.view.copilot.focus"
+  },
+  {
+    "key": "cmd+i",
+    "command": "inlineChat.start",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "ctrl+shift+i",
+    "command": "github.copilot.interactiveEditor.explain",
+    "when": "editorHasSelection"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DEBUGGING (matching <leader>d* bindings)
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    "key": "f5",
+    "command": "workbench.action.debug.continue"
+  },
+  {
+    "key": "f9",
+    "command": "editor.debug.action.toggleBreakpoint"
+  },
+  {
+    "key": "f10",
+    "command": "workbench.action.debug.stepOver"
+  },
+  {
+    "key": "f11",
+    "command": "workbench.action.debug.stepInto"
+  },
+  {
+    "key": "shift+f11",
+    "command": "workbench.action.debug.stepOut"
+  },
+  {
+    "key": "shift+f5",
+    "command": "workbench.action.debug.stop"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GIT (matching <leader>g* bindings)
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    "key": "ctrl+g ctrl+g",
+    "command": "lazygit.toggle"
+  },
+  {
+    "key": "ctrl+g ctrl+b",
+    "command": "gitlens.toggleLineBlame"
+  },
+  {
+    "key": "ctrl+g ctrl+l",
+    "command": "gitlens.showGraph"
+  },
+  {
+    "key": "ctrl+g ctrl+s",
+    "command": "workbench.view.scm"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HARPOON-LIKE QUICK JUMP (Numbered Bookmarks)
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    "key": "ctrl+shift+1",
+    "command": "numberedBookmarks.toggleBookmark1"
+  },
+  {
+    "key": "ctrl+shift+2",
+    "command": "numberedBookmarks.toggleBookmark2"
+  },
+  {
+    "key": "ctrl+shift+3",
+    "command": "numberedBookmarks.toggleBookmark3"
+  },
+  {
+    "key": "ctrl+shift+4",
+    "command": "numberedBookmarks.toggleBookmark4"
+  },
+  {
+    "key": "ctrl+shift+5",
+    "command": "numberedBookmarks.toggleBookmark5"
+  },
+  {
+    "key": "ctrl+1",
+    "command": "numberedBookmarks.jumpToBookmark1"
+  },
+  {
+    "key": "ctrl+2",
+    "command": "numberedBookmarks.jumpToBookmark2"
+  },
+  {
+    "key": "ctrl+3",
+    "command": "numberedBookmarks.jumpToBookmark3"
+  },
+  {
+    "key": "ctrl+4",
+    "command": "numberedBookmarks.jumpToBookmark4"
+  },
+  {
+    "key": "ctrl+5",
+    "command": "numberedBookmarks.jumpToBookmark5"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DIAGNOSTICS NAVIGATION (matching ]d [d)
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    "key": "alt+]",
+    "command": "editor.action.marker.next",
+    "when": "editorFocus"
+  },
+  {
+    "key": "alt+[",
+    "command": "editor.action.marker.prev",
+    "when": "editorFocus"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PROBLEMS PANEL (matching <leader>xw)
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    "key": "cmd+shift+m",
+    "command": "workbench.actions.view.problems"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ZEN MODE (matching <leader>uz)
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    "key": "cmd+k z",
+    "command": "workbench.action.toggleZenMode"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VIM-FRIENDLY ESCAPE (when in various modes)
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    "key": "escape",
+    "command": "workbench.action.closeQuickOpen",
+    "when": "inQuickOpen"
+  },
+  {
+    "key": "escape",
+    "command": "closeFindWidget",
+    "when": "editorFocus && findWidgetVisible"
+  },
+  {
+    "key": "escape",
+    "command": "notifications.clearAll",
+    "when": "notificationCenterVisible"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FILE EXPLORER NAVIGATION (when focused)
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    "key": "h",
+    "command": "list.collapse",
+    "when": "listFocus && !inputFocus"
+  },
+  {
+    "key": "l",
+    "command": "list.expand",
+    "when": "listFocus && !inputFocus"
+  },
+  {
+    "key": "j",
+    "command": "list.focusDown",
+    "when": "listFocus && !inputFocus"
+  },
+  {
+    "key": "k",
+    "command": "list.focusUp",
+    "when": "listFocus && !inputFocus"
+  },
+  {
+    "key": "enter",
+    "command": "list.select",
+    "when": "listFocus && !inputFocus"
+  },
+  {
+    "key": "a",
+    "command": "explorer.newFile",
+    "when": "explorerViewletFocus && !inputFocus"
+  },
+  {
+    "key": "shift+a",
+    "command": "explorer.newFolder",
+    "when": "explorerViewletFocus && !inputFocus"
+  },
+  {
+    "key": "r",
+    "command": "renameFile",
+    "when": "explorerViewletFocus && !inputFocus"
+  },
+  {
+    "key": "d",
+    "command": "deleteFile",
+    "when": "explorerViewletFocus && !inputFocus"
+  },
+  {
+    "key": "y",
+    "command": "filesExplorer.copy",
+    "when": "explorerViewletFocus && !inputFocus"
+  },
+  {
+    "key": "x",
+    "command": "filesExplorer.cut",
+    "when": "explorerViewletFocus && !inputFocus"
+  },
+  {
+    "key": "p",
+    "command": "filesExplorer.paste",
+    "when": "explorerViewletFocus && !inputFocus"
+  }
+]
