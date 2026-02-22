@@ -361,8 +361,53 @@ return {
 					function()
 						ask_smart("Review the active code for refactoring opportunities, potential bugs, and areas for improved maintainability. Provide specific, actionable suggestions.")
 					end,
-				desc = "CopilotChat: Suggest Improvements",
-				mode = { "n", "v" },
+					desc = "CopilotChat: Suggest Improvements",
+					mode = { "n", "v" },
+				},
+
+				-- Explain diagnostic under cursor
+				{
+					"<leader>zd",
+					function()
+						local diag = vim.diagnostic.get(0, { lnum = vim.fn.line(".") - 1 })[1]
+						if not diag then
+							vim.notify("No diagnostic on this line", vim.log.levels.WARN)
+							return
+						end
+						set_source_to_current_window()
+						chat.ask(
+							"#buffer:active\nExplain this error and show how to fix it:\n\n```\n" .. diag.message .. "\n```",
+							{}
+						)
+					end,
+					desc = "CopilotChat: Explain diagnostic under cursor",
+					mode = "n",
+				},
+
+				-- AI commit message (staged diff, falls back to unstaged)
+				{
+					"<leader>zgc",
+					function()
+						local diff = vim.fn.system("git diff --staged")
+						if diff == nil or diff:match("^%s*$") then
+							diff = vim.fn.system("git diff")
+						end
+						if diff == nil or diff:match("^%s*$") then
+							vim.notify("No git diff found", vim.log.levels.WARN)
+							return
+						end
+						set_source_to_current_window()
+						chat.ask(
+							"Write a conventional commit message for this diff.\n"
+								.. "Rules: type(scope): subject — types: feat|fix|refactor|chore|docs|test|style|perf.\n"
+								.. "Output ONLY the commit message, nothing else.\n\n```diff\n"
+								.. diff
+								.. "\n```",
+							{}
+						)
+					end,
+					desc = "CopilotChat: Generate commit message",
+					mode = "n",
 				},
 			})
 		end, -- closes config = function()
