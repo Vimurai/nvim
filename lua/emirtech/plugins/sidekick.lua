@@ -19,9 +19,9 @@ return {
 					-- Esc exits terminal insert mode → normal mode so <leader>h/l/j/k work
 					escape = { "<Esc>", "<C-\\><C-n>", mode = "t", desc = "exit terminal mode" },
 					-- Option+hjkl for window nav from terminal mode (Mac-safe)
-					nav_left  = { "<M-h>", "nav_left",  expr = true, desc = "go to left window" },
-					nav_down  = { "<M-j>", "nav_down",  expr = true, desc = "go to lower window" },
-					nav_up    = { "<M-k>", "nav_up",    expr = true, desc = "go to upper window" },
+					nav_left = { "<M-h>", "nav_left", expr = true, desc = "go to left window" },
+					nav_down = { "<M-j>", "nav_down", expr = true, desc = "go to lower window" },
+					nav_up = { "<M-k>", "nav_up", expr = true, desc = "go to upper window" },
 					nav_right = { "<M-l>", "nav_right", expr = true, desc = "go to right window" },
 				},
 			},

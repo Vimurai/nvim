@@ -26,10 +26,7 @@ return {
 			["<Tab>"] = {
 				"snippet_forward",
 				function() -- sidekick NES: jump to next edit or apply
-					return require("sidekick").nes_jump_or_apply()
-				end,
-				function() -- native inline completions
-					return vim.lsp.inline_completion.get()
+					return require("sidekick.nes").jump()
 				end,
 				"fallback",
 			},
