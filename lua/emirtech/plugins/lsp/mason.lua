@@ -65,6 +65,7 @@ return {
 				"csharpier", -- C# formatter
 				"eslint_d", -- JavaScript/TypeScript linter
 				"htmlbeautifier", -- Razor/HTML formatter
+				"copilot-language-server", -- for sidekick.nvim NES
 			},
 		})
 	end,

@@ -6,7 +6,7 @@ return {
 		dependencies = {
 			"mason-org/mason.nvim",
 			"mason-org/mason-lspconfig.nvim", -- IMPORTANT for modern Mason flow
-			"hrsh7th/cmp-nvim-lsp",
+			"saghen/blink.cmp",
 			{ "antosha417/nvim-lsp-file-operations", config = true },
 			{ "folke/neodev.nvim", opts = {} },
 			"ray-x/lsp_signature.nvim",
@@ -29,12 +29,15 @@ return {
 			})
 
 			-- -------------------------
-			-- Capabilities (for nvim-cmp)
+			-- Capabilities (for blink.cmp)
 			-- -------------------------
-			local capabilities = require("cmp_nvim_lsp").default_capabilities()
-			capabilities.textDocument.completion.completionItem.snippetSupport = true
-			capabilities.offsetEncoding = { "utf-16" }
-			capabilities.textDocument.implementation = { dynamicRegistration = true }
+			local capabilities = require("blink.cmp").get_lsp_capabilities({
+				textDocument = {
+					completion = { completionItem = { snippetSupport = true } },
+					implementation = { dynamicRegistration = true },
+				},
+				offsetEncoding = { "utf-16" },
+			})
 
 			-- -------------------------
 			-- Helper: razor detection (fix signatureHelp JsonException)
