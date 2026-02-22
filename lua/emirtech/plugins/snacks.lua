@@ -140,6 +140,11 @@ return {
 			matcher = {
 				frecency = true,
 			},
+			actions = {
+				sidekick_send = function(...)
+					return require("sidekick.cli.picker.snacks").send(...)
+				end,
+			},
 			win = {
 				input = {
 					keys = {
@@ -151,6 +156,8 @@ return {
 						["K"] = { "preview_scroll_up", mode = { "i", "n" } },
 						["H"] = { "preview_scroll_left", mode = { "i", "n" } },
 						["L"] = { "preview_scroll_right", mode = { "i", "n" } },
+						-- Send picker selection to sidekick AI CLI
+						["<a-a>"] = { "sidekick_send", mode = { "n", "i" } },
 					},
 				},
 			},

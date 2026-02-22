@@ -55,11 +55,43 @@ return {
 				theme = my_lualine_theme,
 			},
 			sections = {
+				lualine_c = {
+					-- Copilot / sidekick NES status
+					{
+						function()
+							return " "
+						end,
+						color = function()
+							local status = require("sidekick.status").get()
+							if status then
+								return status.kind == "Error" and "DiagnosticError"
+									or status.busy and "DiagnosticWarn"
+									or "Special"
+							end
+						end,
+						cond = function()
+							return require("sidekick.status").get() ~= nil
+						end,
+					},
+				},
 				lualine_x = {
 					{
 						lazy_status.updates,
 						cond = lazy_status.has_updates,
 						color = { fg = "#ff9e64" },
+					},
+					-- Sidekick CLI session count
+					{
+						function()
+							local sessions = require("sidekick.status").cli()
+							return " " .. (#sessions > 1 and #sessions or "")
+						end,
+						cond = function()
+							return #require("sidekick.status").cli() > 0
+						end,
+						color = function()
+							return "Special"
+						end,
 					},
 					{ "encoding" },
 					{ "fileformat" },

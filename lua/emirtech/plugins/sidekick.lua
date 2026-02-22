@@ -2,7 +2,6 @@ return {
 	"folke/sidekick.nvim",
 	event = "VeryLazy",
 	opts = {
-		-- Use snacks.nvim as the picker (already installed)
 		picker = "snacks",
 		nes = {
 			enabled = true,
@@ -10,8 +9,21 @@ return {
 		},
 		copilot = {
 			status = {
-				-- Show copilot status in notifications
 				level = vim.log.levels.INFO,
+			},
+		},
+		cli = {
+			win = {
+				layout = "right",
+				keys = {
+					-- Esc exits terminal insert mode → normal mode so <leader>h/l/j/k work
+					escape = { "<Esc>", "<C-\\><C-n>", mode = "t", desc = "exit terminal mode" },
+					-- Option+hjkl for window nav from terminal mode (Mac-safe)
+					nav_left  = { "<M-h>", "nav_left",  expr = true, desc = "go to left window" },
+					nav_down  = { "<M-j>", "nav_down",  expr = true, desc = "go to lower window" },
+					nav_up    = { "<M-k>", "nav_up",    expr = true, desc = "go to upper window" },
+					nav_right = { "<M-l>", "nav_right", expr = true, desc = "go to right window" },
+				},
 			},
 		},
 	},
@@ -20,43 +32,41 @@ return {
 		vim.lsp.enable("copilot_ls")
 	end,
 	keys = {
-		-- NES (Next Edit Suggestions) navigation
-		{
-			"<Tab>",
-			function()
-				require("sidekick.nes").accept()
-			end,
-			mode = { "n", "i" },
-			desc = "Accept NES suggestion",
-		},
 		{
 			"]a",
 			function()
-				require("sidekick.nes").next()
+				require("sidekick.nes").jump()
 			end,
-			desc = "Next NES suggestion",
+			desc = "NES: jump to next suggestion",
 		},
 		{
 			"[a",
 			function()
-				require("sidekick.nes").prev()
+				require("sidekick.nes").clear()
 			end,
-			desc = "Prev NES suggestion",
+			desc = "NES: clear suggestion",
 		},
 		-- AI CLI panel
 		{
 			"<leader>ak",
 			function()
-				require("sidekick").open()
+				require("sidekick.cli").toggle()
 			end,
-			desc = "Sidekick AI CLI",
+			desc = "Sidekick AI CLI toggle",
 		},
 		{
 			"<leader>ap",
 			function()
-				require("sidekick").prompt()
+				require("sidekick.cli").select_prompt()
 			end,
-			desc = "Sidekick Prompt",
+			desc = "Sidekick prompt picker",
+		},
+		{
+			"<leader>at",
+			function()
+				require("sidekick.cli").select_tool()
+			end,
+			desc = "Sidekick tool picker",
 		},
 	},
 }

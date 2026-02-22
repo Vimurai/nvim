@@ -23,6 +23,16 @@ return {
 			["<C-j>"] = { "select_next", "fallback" },
 			["<C-b>"] = { "scroll_documentation_up", "fallback" },
 			["<C-f>"] = { "scroll_documentation_down", "fallback" },
+			["<Tab>"] = {
+				"snippet_forward",
+				function() -- sidekick NES: jump to next edit or apply
+					return require("sidekick").nes_jump_or_apply()
+				end,
+				function() -- native inline completions
+					return vim.lsp.inline_completion.get()
+				end,
+				"fallback",
+			},
 		},
 		appearance = {
 			nerd_font_variant = "mono",
