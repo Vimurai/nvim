@@ -2,10 +2,13 @@ return {
 	"seblyng/roslyn.nvim",
 	ft = { "cs", "razor", "cshtml" },
 	config = function()
-		local capabilities = require("cmp_nvim_lsp").default_capabilities()
-		capabilities.textDocument.completion.completionItem.snippetSupport = true
+		local capabilities = require("blink.cmp").get_lsp_capabilities({
+			textDocument = {
+				completion = { completionItem = { snippetSupport = true } },
+				implementation = { dynamicRegistration = true },
+			},
+		})
 		capabilities.offsetEncoding = { "utf-16" }
-		capabilities.textDocument.implementation = { dynamicRegistration = true }
 
 		require("roslyn").setup({
 			config = {
@@ -33,7 +36,7 @@ return {
 				"--logLevel=Information",
 				"--extensionLogDirectory=" .. vim.fs.dirname(vim.lsp.get_log_path()),
 			},
-			broad_search = true,
+			broad_search = false,
 		})
 	end,
 }
