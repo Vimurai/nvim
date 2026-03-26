@@ -55,9 +55,9 @@ vim.keymap.set("v", "<leader>if", function()
 	-- Exit visual mode before cursor jump
 	vim.api.nvim_feedkeys(esc, "x", false)
 
-	-- Delay cursor movement until after visual exit
-	vim.defer_fn(function()
+	-- Move cursor and enter insert mode after visual exit is processed
+	vim.schedule(function()
 		vim.api.nvim_win_set_cursor(0, { cursor_row, cursor_col })
 		vim.api.nvim_feedkeys("i", "n", true)
-	end, 20)
+	end)
 end, { desc = "Wrap selection in if() and focus condition" })

@@ -1,0 +1,91 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem@2026.1.14",
+        "/Users/emirkovacevic/.config/nvim"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory@2026.1.26"
+      ]
+    },
+    "vibe-check-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/vibe-check-mcp/index.js"
+      ]
+    },
+    "intent-refiner-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/intent-refiner-mcp/index.js"
+      ]
+    },
+    "task-synchronizer-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/task-synchronizer-mcp/index.js"
+      ]
+    },
+    "safe-exec-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/safe-exec-mcp/index.js"
+      ]
+    },
+    "blueprint-aligner-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/blueprint-aligner-mcp/index.js"
+      ]
+    },
+    "context-guardian-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/context-guardian-mcp/index.js"
+      ]
+    },
+    "risk-analyzer-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/risk-analyzer-mcp/index.js"
+      ]
+    },
+    "context-invoker-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/context-invoker-mcp/index.js"
+      ]
+    },
+    "archive-manager-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/archive-manager-mcp/index.js"
+      ]
+    },
+    "orchestrator-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/orchestrator-mcp/index.js"
+      ]
+    },
+    "memory-manager-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/memory-manager-mcp/index.js"
+      ]
+    },
+    "verification-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/verification-mcp/index.js"
+      ]
+    }
+  }
+}

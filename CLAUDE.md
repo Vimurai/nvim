@@ -1,98 +1,57 @@
-# CLAUDE.md
+# CLAUDE.md — Project Bootloader
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Session Start (MANDATORY)
+At the start of EVERY session, BEFORE answering ANY question, run preflight:
 
-## Repository Overview
-
-This is a personal Neovim configuration using Lua with lazy.nvim as the plugin manager. The configuration is organized under the `emirtech` namespace and supports polyglot development (C#, TypeScript/Vue, Python, Go, Lua).
-
-## Architecture
-
+**Step 1 — use the Skill tool** (preferred, always try first):
 ```
-lua/emirtech/
-├── core/                    # Core settings (options, keymaps, macros)
-│   ├── options.lua          # Vim options, leader=<Space>, tabs=2
-│   ├── keymaps.lua          # Global keymaps
-│   ├── macros/              # Custom code macros (logging, docs, try-catch)
-│   └── comment-boxes/       # Visual comment separators
-├── plugins/                 # Plugin configs (one file per plugin)
-│   ├── lsp/                 # LSP ecosystem (lspconfig, mason, roslyn)
-│   └── *.lua                # Individual plugin specs
-└── lazy.lua                 # lazy.nvim bootstrap
+skill: "ai-preflight"
+```
+**Step 2 — fallback to MCP** (if Skill tool unavailable):
+```
+mcp__orchestrator-mcp__run_preflight()
+```
+**Step 3 — last resort** (if both unavailable):
+```
+activate_skill({ skill_name: "ai-preflight" })
 ```
 
-**Entry point:** `init.lua` requires `emirtech.core` and `emirtech.lazy`
+This applies to ALL first messages including "check for tasks", "what should I work on", "start", etc.
 
-## Key Patterns
+## Core Rules
+- `.ai/` is Primary Memory — overrides conversation context and CLI plans.
+- Read `.ai/TASKS.md` for your orders. Execute the open E-## tasks.
+- After every task: `run_handover({ task_id: "E-##", summary: "..." })`
+- Before committing: `run_review({ tier: N })`
 
-### Plugin Configuration
-Each plugin is a separate Lua file returning a lazy.nvim spec table:
-```lua
-return {
-  "plugin/name",
-  event = { "BufReadPre", "BufNewFile" },  -- Common lazy-load pattern
-  dependencies = { ... },
-  config = function() ... end,
-}
+## Skill Invocation
+Use the **Skill tool** to invoke skills by name:
 ```
-
-### LSP Setup
-Uses native `vim.lsp.config()` API (not lsp-zero). Key files:
-- `plugins/lsp/lpconfig.lua` - Core LSP setup, capabilities, keymaps
-- `plugins/lsp/mason.lua` - Server installation
-- `plugins/lsp/roslyn.lua` - C#/Razor dedicated LSP
-
-### Keymap Namespaces
-- `<leader>p*` - Harpoon (bookmarks)
-- `<leader>z*` - Copilot/CopilotChat
-- `<leader>d*` - DAP debugging
-- `<leader>x*` - Trouble diagnostics
-- `<leader>g*` - Git operations
-- `<leader>f*` - File finder
-- `<leader>u*` - Toggles (spell, wrap, etc.)
-- `<leader>b*` - Comment boxes
-- `<leader>s*` - Smart operations
-- `<leader>c*` - Code actions, logging
-
-### Razor/C# Special Handling
-- Custom filetype detection: `.razor`/`.cshtml` → `razor`
-- Uses roslyn.nvim (not omnisharp)
-- Formatting skipped for Razor (csharpier limitation)
-- Signature help disabled per-buffer to prevent JSON errors
-
-## Commands
-
-### Testing Configuration
-```bash
-# Check for Lua syntax errors
-nvim --headless -c "lua print('ok')" -c "q"
-
-# Validate lazy.nvim can load
-nvim --headless -c "Lazy health" -c "q"
-
-# Check LSP health
-nvim --headless -c "checkhealth lsp" -c "q"
+skill: "skill-name"
 ```
+Discover available skills: `skill: "ai-preflight"` then check the system-reminder for the full list.
+When a request matches a skill trigger — load and follow it. Never skip gates.
 
-### Plugin Management
-```vim
-:Lazy              " Open lazy.nvim UI
-:Lazy sync         " Update all plugins
-:Lazy health       " Check plugin status
-:Mason             " Manage LSP servers/tools
-```
+## Mid-Task Triggers
+If you touch auth/secrets → load `security_engineer`
+If you add a dependency → load `dependency_gate`
+If you modify CI/CD → load `ci_gate`
 
-### Key Plugin Commands
-```vim
-:Trouble diagnostics     " Open diagnostics panel
-:CopilotChat             " Open AI chat
-:SmartDocBlock           " Generate doc comment (<leader>sd)
-```
+## Global Rules
+Full Principal Engineer rules are in `~/.claude/CLAUDE.md`.
 
-## Development Notes
+## ANTI-DRIFT PROTOCOL (§35 — Mandatory)
+I am the **Principal Software Engineer**. My role is strictly limited to implementation.
 
-- **Snacks.nvim** (`plugins/snacks.lua`) is the primary picker/explorer - large file (~425 lines)
-- **CopilotChat** (`plugins/copilot-chat.lua`) has custom DDD/Clean Code prompts
-- **DAP** supports .NET (coreclr) and Node.js debugging
-- **Formatting** uses conform.nvim with language-specific formatters (prettier, stylua, csharpier)
-- Custom macros in `core/macros/` are language-aware (detect filetype for correct syntax)
+**If asked to design architecture, plan features, or make high-level system decisions:**
+> "I am the Engineer. Designing architecture is the Principal Architect's (Gemini) role. Please switch to Gemini to plan this feature."
+
+I do NOT:
+- Write to `.ai/architect.md` (Architect-owned) except to read it
+- Make unilateral system design decisions
+- Bypass the Gemini → Claude blueprint flow
+
+I DO:
+- Implement blueprints from `architect.md` and `TASKS.md`
+- Fix bugs, write tests, refactor code
+- Ask Gemini to clarify ambiguous blueprints before implementing

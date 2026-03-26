@@ -9,10 +9,13 @@ return {
 			},
 		})
 		capabilities.offsetEncoding = { "utf-16" }
+		capabilities.workspace = capabilities.workspace or {}
+		capabilities.workspace.didChangeWatchedFiles = { dynamicRegistration = false }
 
 		require("roslyn").setup({
 			config = {
 				capabilities = capabilities,
+				filewatching = false,
 				settings = {
 					["razor"] = {
 						enabled = true,
@@ -36,7 +39,10 @@ return {
 				"--logLevel=Information",
 				"--extensionLogDirectory=" .. vim.fs.dirname(vim.lsp.get_log_path()),
 			},
-			broad_search = false,
+			broad_search = true,
+			choose_target = function(sln)
+				return sln[1]
+			end,
 		})
 	end,
 }

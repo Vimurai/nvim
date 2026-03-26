@@ -23,17 +23,15 @@ return {
 				lua = { "stylua" },
 				python = { "isort", "black" },
 				vue = { "prettier" }, -- Added Vue formatting support
-				go = { "gofmt", "gofmt" }, -- Added Go formatting support
+				go = { "gofmt" },
 				cs = { "csharpier" },
-				-- razor: current csharpier doesn't support razor, fallback to LSP formatting
-				razor = { "lsp" },
 			},
 			format_on_save = function(bufnr)
 				local ft = vim.bo[bufnr].filetype
 
-				-- ✅ Skip auto-format for Razor on save
+				-- ✅ Razor: format via LSP on save
 				if ft == "razor" then
-					return
+					return { lsp_format = "first", timeout_ms = 5000 }
 				end
 
 				-- ✅ For C#: use csharpier (no LSP)
@@ -54,8 +52,6 @@ return {
 					command = vim.fn.executable("./node_modules/.bin/prettier") == 1 and "./node_modules/.bin/prettier"
 						or "prettier",
 					args = {
-						"--config",
-						vim.fn.getcwd() .. "/.prettierrc.json",
 						"--stdin-filepath",
 						"$FILENAME",
 					},
@@ -68,7 +64,7 @@ return {
 
 		vim.keymap.set({ "n", "v" }, "<leader>mp", function()
 			conform.format({
-				lsp_fallback = true,
+				lsp_format = "fallback",
 				async = false,
 				timeout_ms = 1000,
 			})
