@@ -10,6 +10,7 @@ return {
 			{ "antosha417/nvim-lsp-file-operations", config = true },
 			{ "folke/neodev.nvim", opts = {} },
 			"ray-x/lsp_signature.nvim",
+			"b0o/SchemaStore.nvim", -- JSON/YAML schemas for jsonls + yamlls
 		},
 		config = function()
 			-- -------------------------
@@ -105,6 +106,23 @@ return {
 			-- Server configs (native API)
 			-- -------------------------
 
+			-- clangd (C/C++ — ESP-IDF, embedded)
+			-- --query-driver tells clangd to use the xtensa cross-compiler for system
+			-- include paths instead of the host macOS compiler, fixing sys/features.h errors.
+			vim.lsp.config("clangd", {
+				capabilities = capabilities,
+				cmd = {
+					"clangd",
+					"--query-driver="
+						.. vim.fn.expand("~")
+						.. "/.espressif/tools/xtensa-esp-elf/*/xtensa-esp-elf/bin/xtensa-esp*-elf-gcc,"
+						.. vim.fn.expand("~")
+						.. "/.espressif/tools/riscv32-esp-elf/*/riscv32-esp-elf/bin/riscv32-esp*-elf-gcc",
+					"--background-index",
+					"--clang-tidy",
+				},
+			})
+
 			-- Lua LS (optional; neodev already helps)
 			vim.lsp.config("lua_ls", {
 				capabilities = capabilities,
@@ -181,11 +199,37 @@ return {
 				},
 			})
 
+			-- JSON LS + SchemaStore (package.json, tsconfig, eslintrc, etc.)
+			vim.lsp.config("jsonls", {
+				capabilities = capabilities,
+				settings = {
+					json = {
+						schemas = require("schemastore").json.schemas(),
+						validate = { enable = true },
+					},
+				},
+			})
+
+			-- YAML LS + SchemaStore (GitHub Actions, docker-compose, k8s, etc.)
+			vim.lsp.config("yamlls", {
+				capabilities = capabilities,
+				settings = {
+					yaml = {
+						schemaStore = {
+							-- disable built-in store; use SchemaStore.nvim's catalog instead
+							enable = false,
+							url = "",
+						},
+						schemas = require("schemastore").yaml.schemas(),
+					},
+				},
+			})
+
 			-- -------------------------
 			-- Enable servers (explicitly)
 			-- -------------------------
 			-- Mason-lspconfig can auto-enable installed servers, but enabling explicitly is stable & clear.
-			vim.lsp.enable({ "lua_ls", "eslint", "vtsls", "vue_ls" })
+			vim.lsp.enable({ "lua_ls", "eslint", "vtsls", "vue_ls", "clangd", "jsonls", "yamlls" })
 		end,
 	},
 }

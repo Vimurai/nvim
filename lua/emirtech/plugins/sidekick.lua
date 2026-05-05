@@ -4,7 +4,9 @@ return {
 	opts = {
 		picker = "snacks",
 		nes = {
-			enabled = true,
+			enabled = function(buf)
+				return vim.bo[buf].filetype ~= "vue"
+			end,
 			debounce = 100,
 		},
 		copilot = {

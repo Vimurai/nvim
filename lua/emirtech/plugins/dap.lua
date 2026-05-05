@@ -19,7 +19,7 @@ return {
 			require("netcoredbg-macOS-arm64").setup(dap)
 
 			require("mason-nvim-dap").setup({
-				ensure_installed = { "js-debug-adapter" },
+				ensure_installed = { "js-debug-adapter", "codelldb" },
 				automatic_installation = true,
 				handlers = {},
 			})
@@ -40,6 +40,25 @@ return {
 						"${port}",
 					},
 				},
+			}
+
+			-- C/C++ Adapter (codelldb) — for host C/C++ binaries
+			dap.adapters.codelldb = {
+				type = "server",
+				port = "${port}",
+				executable = {
+					command = vim.fn.stdpath("data") .. "/mason/packages/codelldb/codelldb",
+					args = { "--port", "${port}" },
+				},
+			}
+
+			-- ESP32 Adapter (xtensa-esp-elf-gdb via OpenOCD)
+			-- Prereq: `idf.py openocd` running in another terminal (or Snacks term)
+			dap.adapters.esp32_gdb = {
+				type = "executable",
+				command = vim.fn.expand("~")
+					.. "/.espressif/tools/xtensa-esp-elf-gdb/*/xtensa-esp-elf-gdb/bin/xtensa-esp32-elf-gdb",
+				name = "xtensa-esp-elf-gdb",
 			}
 
 			-----------------------------------------------------------------------
@@ -111,6 +130,43 @@ return {
 			}
 
 			dap.configurations.razor = dap.configurations.cs
+
+			-- C/C++ configurations (codelldb for host binaries)
+			local cpp_configs = {
+				{
+					name = "Launch executable (codelldb)",
+					type = "codelldb",
+					request = "launch",
+					program = function()
+						return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+					end,
+					cwd = "${workspaceFolder}",
+					stopOnEntry = false,
+				},
+				{
+					name = "Attach to ESP32 (OpenOCD :3333)",
+					type = "esp32_gdb",
+					request = "launch",
+					program = function()
+						local cwd = vim.fn.getcwd()
+						local elfs = vim.fn.glob(cwd .. "/build/*.elf", false, true)
+						if #elfs == 1 then
+							return elfs[1]
+						end
+						return vim.fn.input("Path to .elf: ", cwd .. "/build/", "file")
+					end,
+					cwd = "${workspaceFolder}",
+					miDebuggerServerAddress = "localhost:3333",
+					stopAtEntry = true,
+					setupCommands = {
+						{ text = "set remotetimeout 60", description = "longer timeout", ignoreFailures = false },
+						{ text = "monitor reset halt", description = "reset target", ignoreFailures = true },
+						{ text = "flushregs", description = "refresh regs", ignoreFailures = true },
+					},
+				},
+			}
+			dap.configurations.c = cpp_configs
+			dap.configurations.cpp = cpp_configs
 
 			-- JS/TS configurations
 			local js_langs = { "typescript", "javascript", "typescriptreact", "javascriptreact", "vue" }

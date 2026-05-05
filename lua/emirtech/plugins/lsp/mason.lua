@@ -47,6 +47,9 @@ return {
 				"vtsls",
 				"eslint",
 				"gopls",
+				"clangd", -- C/C++ LSP (ESP-IDF, embedded)
+				"jsonls", -- JSON LSP (paired with SchemaStore)
+				"yamlls", -- YAML LSP (paired with SchemaStore)
 			},
 		})
 
