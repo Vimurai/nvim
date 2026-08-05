@@ -50,12 +50,34 @@ return {
 				-- It authenticates through the claude CLI's own session, so if it
 				-- ever reports a login is needed, run `claude /login` in a terminal.
 				claude_code = function()
-					return require("codecompanion.adapters").extend("claude_code", {
+					local adapter = require("codecompanion.adapters").extend("claude_code", {
 						commands = {
 							default = { "claude-code-acp" },
 							yolo = { "claude-code-acp", "--yolo" },
 						},
 					})
+
+					-- Clear the env table outright rather than merging over it.
+					--
+					-- The adapter ships env = { CLAUDE_CODE_OAUTH_TOKEN =
+					-- "CLAUDE_CODE_OAUTH_TOKEN" }, meaning "read that variable".
+					-- When it is unset, get_env_vars falls through and hands the
+					-- child the *literal name* as the value, so the bridge sends
+					-- `Bearer CLAUDE_CODE_OAUTH_TOKEN` and the API answers 401
+					-- "Invalid bearer token". Verified: env_replaced held a 23-char
+					-- string, exactly the length of the variable name.
+					--
+					-- With nothing set here the bridge inherits the environment and
+					-- uses the claude CLI's own Keychain session, which is the
+					-- documented auth path ("Run `claude /login`"). vim.system adds
+					-- to the inherited environment rather than replacing it, so an
+					-- empty table means "change nothing".
+					--
+					-- Only set CLAUDE_CODE_OAUTH_TOKEN in your shell if you have
+					-- generated a real long-lived token via `claude setup-token`.
+					adapter.env = {}
+
+					return adapter
 				end,
 			},
 		},
