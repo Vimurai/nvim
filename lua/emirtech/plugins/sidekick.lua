@@ -86,7 +86,7 @@ return {
 		{
 			"<leader>ap",
 			function()
-				require("sidekick.cli").select_prompt()
+				require("sidekick.cli").prompt()
 			end,
 			desc = "Sidekick prompt picker",
 		},
@@ -123,7 +123,7 @@ return {
 		{
 			"<leader>al", -- Changed this from 'at' because it conflicted with "Send This" above
 			function()
-				require("sidekick.cli").select_tool()
+				require("sidekick.cli").select()
 			end,
 			desc = "Sidekick tool picker",
 		},

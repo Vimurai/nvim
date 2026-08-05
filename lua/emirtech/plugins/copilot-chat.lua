@@ -50,6 +50,13 @@ return {
 			local window = chat.chat
 
 			chat.setup({
+				-- CopilotChat defaults to "gpt-4.1", but GitHub now marks the entire
+				-- GPT-4 family as model_picker_enabled=false for this account. The
+				-- Copilot provider filters the model list to picker-enabled chat
+				-- models only (config/providers.lua), so the default resolves to
+				-- nothing -> "Model not found: gpt-4.1". gpt-5.3-codex is the only
+				-- picker-enabled chat model available; verify with :CopilotChatModels.
+				model = "gpt-5.3-codex",
 				window = {
 					layout = "vertical",
 					width = 0.45,
@@ -57,6 +64,11 @@ return {
 					title = "🤖 CopilotChat",
 				},
 				auto_insert_mode = true,
+				-- Disable the TextChangedI auto-complete trigger. It debounces 100ms and then
+				-- calls vim.fn.complete(), which throws E21 when a streaming response has locked
+				-- the chat buffer (modifiable = off). Completion still works manually via the
+				-- `complete` mapping (<C-o>/Tab in insert mode).
+				chat_autocomplete = false,
 			})
 
 			local wk = require("which-key")
@@ -84,11 +96,15 @@ return {
 				return m == "v" or m == "V" or m == "\22" -- charwise, linewise, block
 			end
 
+			-- Signature of the Harpoon list used by the previous ask, so we can
+			-- detect when files were added/removed and reset accordingly.
+			local last_harpoon_signature = nil
+
 			-- Ask with Harpoon-based context
 			local function ask_smart(prompt)
 				set_source_to_current_window()
 
-				-- 1. Sync first to ensure internal sticky state matches Harpoon
+				-- Build the current Harpoon context fresh on every ask.
 				local ok_h, harpoon = pcall(require, "harpoon")
 				local harpoon_buffers = {}
 				if ok_h then
@@ -99,14 +115,19 @@ return {
 					end
 				end
 
-				-- 2. Explicitly clear any existing #file sticky items from the active chat
-				-- to prevent accumulation if the events didn't catch everything.
-				if chat.chat and chat.chat.sticky then
-					for i = #chat.chat.sticky, 1, -1 do
-						if chat.chat.sticky[i]:match("^#file:") then
-							table.remove(chat.chat.sticky, i)
-						end
-					end
+				-- CopilotChat rebuilds its sticky context by re-harvesting the
+				-- `> #file:` lines already written into the chat buffer
+				-- (process_sticky -> get_message), and prior conversation turns
+				-- still embed the old file contents. Mutating chat.chat.sticky
+				-- does nothing: process_sticky reads the buffer and overwrites
+				-- that table. So a file removed from Harpoon keeps leaking back
+				-- in. When the Harpoon set changes, reset the conversation so the
+				-- stale files are truly gone; leave an unchanged set alone so an
+				-- ongoing back-and-forth is preserved.
+				local signature = table.concat(harpoon_buffers, "\n")
+				if signature ~= last_harpoon_signature then
+					chat.reset()
+					last_harpoon_signature = signature
 				end
 
 				local header
@@ -122,46 +143,14 @@ return {
 			end
 
 			---------------------------------------------------------------------------
-			-- 4) Harpoon → CopilotChat Sync (Auto-remove)
+			-- 4) Harpoon → CopilotChat Sync
 			---------------------------------------------------------------------------
-			local ok_h, h = pcall(require, "harpoon")
-			if ok_h then
-				local function sync_harpoon_to_copilot()
-					local ok_c, c = pcall(require, "CopilotChat")
-					if not ok_c then
-						return
-					end
-
-					local active_chat = c.chat
-					if not active_chat then
-						return
-					end
-
-					-- Ensure sticky table exists
-					active_chat.sticky = active_chat.sticky or {}
-
-					-- 1. Remove all existing #file: sticky items
-					for i = #active_chat.sticky, 1, -1 do
-						if active_chat.sticky[i]:match("^#file:") then
-							table.remove(active_chat.sticky, i)
-						end
-					end
-
-					-- 2. Re-add from Harpoon list
-					for _, item in ipairs(h:list().items) do
-						if item.value and item.value ~= "" then
-							table.insert(active_chat.sticky, "#file:" .. item.value)
-						end
-					end
-				end
-
-				h:extend({
-					REMOVE = sync_harpoon_to_copilot,
-					CLEAR = sync_harpoon_to_copilot,
-					ADD = sync_harpoon_to_copilot,
-					UI_CLOSE = sync_harpoon_to_copilot,
-				})
-			end
+			-- Note: no harpoon event hooks are needed. CopilotChat rebuilds its
+			-- sticky context from the chat buffer on every ask, so editing
+			-- chat.chat.sticky on harpoon events had no effect on what was sent.
+			-- ask_smart() now reads the live Harpoon list and resets the chat
+			-- whenever that list changes, which is what actually drops removed
+			-- files from the context.
 
 			---------------------------------------------------------------------------
 			-- 5) Rename prompt (your DDD / Clean Code rules)
