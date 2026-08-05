@@ -28,9 +28,12 @@ return {
 		},
 	},
 	init = function()
-		-- 1. Start the server
-		vim.lsp.enable("copilot_ls")
-		-- 2. ENABLE the native ghost text engine
+		-- The Copilot server itself is enabled by mason-lspconfig's
+		-- automatic_enable, using nvim-lspconfig's canonical `copilot` config.
+		-- Do not enable a second one here: sidekick's is_copilot() matches any
+		-- client whose name contains "copilot", so a duplicate means two node
+		-- processes, two sets of inlineCompletion candidates, and NES firing at
+		-- whichever it picks first.
 		if vim.lsp.inline_completion then
 			vim.lsp.inline_completion.enable(true)
 		end

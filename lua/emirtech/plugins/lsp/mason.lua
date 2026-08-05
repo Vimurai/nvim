@@ -50,6 +50,10 @@ return {
 				"clangd", -- C/C++ LSP (ESP-IDF, embedded)
 				"jsonls", -- JSON LSP (paired with SchemaStore)
 				"yamlls", -- YAML LSP (paired with SchemaStore)
+				-- Copilot: automatic_enable above turns this on via lspconfig's
+				-- canonical config. Listed explicitly so a fresh Mason install
+				-- still gets it rather than silently dropping ghost text.
+				"copilot",
 			},
 		})
 

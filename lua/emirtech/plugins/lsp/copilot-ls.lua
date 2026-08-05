@@ -1,11 +1,15 @@
-vim.lsp.config("copilot_ls", {
-	cmd = { vim.fn.expand("$HOME/.local/share/nvim/mason/bin/copilot-language-server"), "--stdio" },
-	-- REMOVED the filetypes = { "*" } line to kill the warning
-	root_markers = { ".git" },
-	init_options = {
-		editorInfo = { name = "Neovim", version = vim.version().major .. "." .. vim.version().minor },
-		editorPluginInfo = { name = "sidekick.nvim", version = "0.0.1" },
-	},
-})
-
+-- Copilot's language server is configured by nvim-lspconfig (`lsp/copilot.lua`)
+-- and turned on by mason-lspconfig's automatic_enable, so no custom config is
+-- needed here.
+--
+-- This file used to declare a second server named `copilot_ls`. Both it and the
+-- lspconfig one attached to the same buffer and both advertised
+-- textDocument/inlineCompletion, which on Neovim 0.12 means two
+-- copilot-language-server processes and duplicate ghost-text candidates.
+-- sidekick's is_copilot() matches any client whose name contains "copilot", so
+-- NES saw both too. It was inert on 0.11 only because the native
+-- inline-completion engine did not exist there.
+--
+-- The upstream config is also the one defining :LspCopilotSignIn and
+-- :LspCopilotSignOut, which the custom config lacked.
 return {}
