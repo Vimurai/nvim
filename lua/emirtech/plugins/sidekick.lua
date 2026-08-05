@@ -40,26 +40,20 @@ return {
 	end,
 	keys = {
 		{
+			-- Normal mode only. Insert-mode Tab is owned by blink.cmp's keymap
+			-- (blink-cmp.lua), which runs the same NES-then-inline-completion
+			-- chain and wins there anyway — having both meant two handlers racing
+			-- for one key. Inline completion is insert-mode only in any case
+			-- (":h lsp-inline_completion" refreshes on insert), so there is
+			-- nothing for it to do here.
 			"<tab>",
 			function()
-				-- if there is a next edit, jump to it, otherwise apply it if any
 				if require("sidekick").nes_jump_or_apply() then
-					return "" -- return empty string so Neovim doesn't type anything
+					return "" -- consumed: do not type a literal tab
 				end
-
-				-- Native inline completion (Neovim >= 0.12). get() IS the accept:
-				-- it applies the displayed candidate and returns whether one was
-				-- applied. The API has no accept() (:h lsp-inline_completion), so
-				-- calling one throws — and inside an expr mapping that breaks Tab.
-				local inline = vim.lsp and vim.lsp.inline_completion
-				if inline and type(inline.get) == "function" and inline.get() then
-					return ""
-				end
-
-				-- fall back to normal tab
-				return "<tab>"
+				return "<tab>" -- falls through to <C-i> / jumplist
 			end,
-			mode = { "i", "n" },
+			mode = "n",
 			expr = true,
 			desc = "Goto/Apply Next Edit Suggestion",
 		},
