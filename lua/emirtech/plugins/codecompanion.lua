@@ -40,12 +40,20 @@ return {
 	},
 	opts = {
 		-- Every interaction runs on Copilot. You are already authenticated for it
-		-- (copilot-language-server via mason-lspconfig), so this needs no extra
-		-- API key, no extra binary, and no separate sign-in.
+		-- (~/.config/github-copilot), so this needs no extra API key, no extra
+		-- binary, and no separate sign-in.
+		--
+		-- The model is pinned rather than left on "auto". GitHub's auto router
+		-- sent a chat request to a model with a 12288-token limit and the request
+		-- died with model_max_prompt_tokens_exceeded at 34420 tokens — code
+		-- review and editor context push prompts well past that. This account
+		-- only exposes two chat models anyway ("auto" and this one), so there is
+		-- nothing lost by naming it. Check with :CodeCompanionActions if the
+		-- roster changes.
 		interactions = {
-			chat = { adapter = "copilot" },
-			inline = { adapter = "copilot" },
-			cmd = { adapter = "copilot" },
+			chat = { adapter = { name = "copilot", model = "gpt-5.3-codex" } },
+			inline = { adapter = { name = "copilot", model = "gpt-5.3-codex" } },
+			cmd = { adapter = { name = "copilot", model = "gpt-5.3-codex" } },
 
 			-- Pull-request-style review of an agent's work. Snapshots the worktree
 			-- to refs/worktree/codecompanion/baseline, diffs it against disk, and

@@ -15,8 +15,10 @@ return {
 			-- Lua: luacheck (requires `luacheck` to be installed globally or via Mason)
 			lua = { "luacheck" },
 
-			-- Python: flake8, pylint (requires linters to be installed)
-			python = { "flake8" },
+			-- pylint, not flake8: mason_tool_installer installs pylint (see
+			-- lsp/mason.lua) and flake8 was never installed, so every Python
+			-- buffer logged "Error running flake8: ENOENT" on each lint trigger.
+			python = { "pylint" },
 
 			-- Markdown: markdownlint (requires `markdownlint-cli` to be installed)
 			markdown = { "markdownlint" },
