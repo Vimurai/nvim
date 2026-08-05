@@ -31,29 +31,47 @@ return {
 			preset = "none",
 			["<C-Space>"] = { "show", "show_documentation", "hide_documentation" },
 			["<C-e>"] = { "hide", "fallback" },
+			-- Accepts only when you have actually selected something with <C-j>/<C-k>.
+			-- With preselect off (see completion.list below) nothing is selected by
+			-- default, so this falls through to a real newline.
 			["<CR>"] = { "accept", "fallback" },
 			["<C-k>"] = { "select_prev", "fallback" },
 			["<C-j>"] = { "select_next", "fallback" },
 			["<C-b>"] = { "scroll_documentation_up", "fallback" },
 			["<C-f>"] = { "scroll_documentation_down", "fallback" },
-			["<Tab>"] = {
-				"snippet_forward",
-				function() -- sidekick next edit suggestion
-					if require("sidekick").nes_jump_or_apply() then
-						return true -- MUST return true so Blink knows to stop checking fallbacks
-					end
-				end,
-				function() -- native inline completion (Neovim >= 0.12)
-					-- get() IS the accept: it applies the displayed candidate and
-					-- returns whether one was applied. The API has no accept()
-					-- (:h lsp-inline_completion), so calling one throws.
-					local inline = vim.lsp and vim.lsp.inline_completion
-					if inline and type(inline.get) == "function" and inline.get() then
-						return true -- MUST return true so Blink knows to stop checking fallbacks
-					end
-				end,
-				"fallback",
-			},
+			-- Tab only ever acts at the cursor. It never moves you.
+				--
+				-- Next Edit Suggestions used to run here, ahead of inline completion.
+				-- nes_jump_or_apply() is `Nes.jump() or Nes.apply()`, so whenever
+				-- Copilot had a suggestion elsewhere in the file it won the race,
+				-- threw the cursor across the buffer and edited there — even though
+				-- ghost text was sitting under the cursor waiting to be accepted.
+				-- NES now lives on <M-Tab> in insert mode and <Tab> in normal mode.
+				["<Tab>"] = {
+					-- 1. Ghost text at the cursor: the thing you are looking at.
+					--    get() IS the accept — it applies the candidate and returns
+					--    whether it did. The API has no accept() (:h
+					--    lsp-inline_completion), so calling one throws.
+					function()
+						local inline = vim.lsp and vim.lsp.inline_completion
+						if inline and type(inline.get) == "function" and inline.get() then
+							return true -- stop checking fallbacks
+						end
+					end,
+					-- 2. Snippet placeholders you are already inside.
+					"snippet_forward",
+					-- 3. A literal tab.
+					"fallback",
+				},
+				-- Opt in to a Next Edit Suggestion without leaving insert mode.
+				["<M-Tab>"] = {
+					function()
+						if require("sidekick").nes_jump_or_apply() then
+							return true
+						end
+					end,
+					"fallback",
+				},
 		},
 		appearance = {
 			nerd_font_variant = "mono",
@@ -63,6 +81,18 @@ return {
 			},
 		},
 		completion = {
+			list = {
+				selection = {
+					-- blink defaults both of these to true, which is why <CR> kept
+					-- accepting completions nobody chose: the first item was selected
+					-- the instant the menu appeared, so Enter-for-a-newline accepted
+					-- it instead. Nothing is selected now until you press <C-j>/<C-k>.
+					preselect = false,
+					-- Selecting no longer writes the item into the buffer as you move
+					-- through the list; text only lands when you accept.
+					auto_insert = false,
+				},
+			},
 			documentation = {
 				auto_show = true,
 				auto_show_delay_ms = 200,
