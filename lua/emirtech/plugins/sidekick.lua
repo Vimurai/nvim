@@ -44,15 +44,13 @@ return {
 					return "" -- return empty string so Neovim doesn't type anything
 				end
 
-				-- if you are using Neovim's native inline completions
+				-- Native inline completion (Neovim >= 0.12). get() IS the accept:
+				-- it applies the displayed candidate and returns whether one was
+				-- applied. The API has no accept() (:h lsp-inline_completion), so
+				-- calling one throws — and inside an expr mapping that breaks Tab.
 				local inline = vim.lsp and vim.lsp.inline_completion
-				if inline and type(inline.get) == "function" then
-					local ok, sugg = pcall(inline.get)
-					if ok and sugg ~= nil and sugg ~= false then
-						-- 3. ACCEPT the completion to actually insert the text!
-						inline.accept()
-						return ""
-					end
+				if inline and type(inline.get) == "function" and inline.get() then
+					return ""
 				end
 
 				-- fall back to normal tab

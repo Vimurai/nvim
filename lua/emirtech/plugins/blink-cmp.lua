@@ -1,3 +1,14 @@
+-- Neovim >= 0.12 renders Copilot as native ghost text via
+-- vim.lsp.inline_completion (enabled in sidekick.lua). On those versions the
+-- completion-menu source would surface the same suggestions a second time, so
+-- it is dropped. On 0.11 the native engine does not exist and this source is
+-- the only Copilot surface there is — removing it unconditionally would leave
+-- no suggestions at all.
+local has_native_inline = vim.lsp.inline_completion ~= nil
+
+local sources = has_native_inline and { "lsp", "path", "snippets", "buffer" }
+	or { "copilot", "lsp", "path", "snippets", "buffer" }
+
 return {
 	"saghen/blink.cmp",
 	event = { "InsertEnter", "CmdlineEnter" },
@@ -32,14 +43,13 @@ return {
 						return true -- MUST return true so Blink knows to stop checking fallbacks
 					end
 				end,
-				function() -- if you are using Neovim's native inline completions
+				function() -- native inline completion (Neovim >= 0.12)
+					-- get() IS the accept: it applies the displayed candidate and
+					-- returns whether one was applied. The API has no accept()
+					-- (:h lsp-inline_completion), so calling one throws.
 					local inline = vim.lsp and vim.lsp.inline_completion
-					if inline and type(inline.get) == "function" then
-						local ok, sugg = pcall(inline.get)
-						if ok and sugg ~= nil and sugg ~= false then
-							inline.accept() -- Actually insert the text!
-							return true -- MUST return true so Blink knows to stop checking fallbacks
-						end
+					if inline and type(inline.get) == "function" and inline.get() then
+						return true -- MUST return true so Blink knows to stop checking fallbacks
 					end
 				end,
 				"fallback",
@@ -64,9 +74,9 @@ return {
 			},
 		},
 		sources = {
-			-- 2. Add 'copilot' to your default active sources list
-			default = { "copilot", "lsp", "path", "snippets", "buffer" },
-			-- 3. Define the provider configuration
+			default = sources,
+			-- Provider stays defined either way; it is simply not in `default`
+			-- on 0.12, so it costs nothing and can be re-enabled by hand.
 			providers = {
 				copilot = {
 					name = "copilot",
