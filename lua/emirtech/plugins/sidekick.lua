@@ -15,6 +15,24 @@ return {
 			},
 		},
 		cli = {
+			tools = {
+				-- Antigravity, the Architect's CLI. It has no ACP mode — `agy
+				-- --help` lists no ACP flag or subcommand — so it cannot be driven
+				-- through CodeCompanion like Claude Code can. A terminal session is
+				-- the only integration available, which is what sidekick provides.
+				--
+				-- Worth knowing why this matters: `gemini --acp` does complete an
+				-- ACP handshake, but authentication fails with IneligibleTierError,
+				-- "no longer supported for Gemini Code Assist for individuals …
+				-- migrate to the Antigravity suite". agy is that migration, so it
+				-- is the working path to Gemini here, just not over ACP.
+				agy = {
+					cmd = { "agy" },
+					is_proc = "\\<agy\\>",
+					url = "https://antigravity.google",
+					continue = { "--continue" },
+				},
+			},
 			win = {
 				layout = "right",
 				keys = {

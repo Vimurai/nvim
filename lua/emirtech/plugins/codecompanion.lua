@@ -39,6 +39,27 @@ return {
 		{ "<leader>cg", "<cmd>CodeCompanion /commit<cr>", mode = "n", desc = "CodeCompanion: commit message" },
 	},
 	opts = {
+		adapters = {
+			acp = {
+				-- The stock claude_code adapter shells out to `claude-agent-acp`,
+				-- which does not exist — no such binary, and nothing is published
+				-- under that name. Claude Code itself has no ACP mode either
+				-- (checked `claude --help`, v2.1.222). The working bridge is Zed's,
+				-- installed with:
+				--   npm install -g @zed-industries/claude-code-acp
+				-- It authenticates through the claude CLI's own session, so if it
+				-- ever reports a login is needed, run `claude /login` in a terminal.
+				claude_code = function()
+					return require("codecompanion.adapters").extend("claude_code", {
+						commands = {
+							default = { "claude-code-acp" },
+							yolo = { "claude-code-acp", "--yolo" },
+						},
+					})
+				end,
+			},
+		},
+
 		-- Every interaction runs on Copilot. You are already authenticated for it
 		-- (~/.config/github-copilot), so this needs no extra API key, no extra
 		-- binary, and no separate sign-in.
