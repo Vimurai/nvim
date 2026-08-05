@@ -21,12 +21,6 @@
         "/Users/emirkovacevic/.ai-os/mcp/vibe-check-mcp/index.js"
       ]
     },
-    "intent-refiner-mcp": {
-      "command": "node",
-      "args": [
-        "/Users/emirkovacevic/.ai-os/mcp/intent-refiner-mcp/index.js"
-      ]
-    },
     "task-synchronizer-mcp": {
       "command": "node",
       "args": [
@@ -37,7 +31,10 @@
       "command": "node",
       "args": [
         "/Users/emirkovacevic/.ai-os/mcp/safe-exec-mcp/index.js"
-      ]
+      ],
+      "env": {
+        "AI_OS_CALLER_ROLE": "architect"
+      }
     },
     "blueprint-aligner-mcp": {
       "command": "node",
@@ -86,6 +83,83 @@
       "args": [
         "/Users/emirkovacevic/.ai-os/mcp/verification-mcp/index.js"
       ]
+    },
+    "lsp-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/lsp-mcp/index.js"
+      ]
+    },
+    "patch-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/patch-mcp/index.js"
+      ]
+    },
+    "token-budget-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/token-budget-mcp/index.js"
+      ]
+    },
+    "propose-patch-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/propose-patch-mcp/index.js"
+      ]
+    },
+    "github-bridge-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/github-bridge-mcp/index.js"
+      ]
+    },
+    "approval-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/approval-mcp/index.js"
+      ]
+    },
+    "advisor-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/advisor-mcp/index.js"
+      ]
+    },
+    "computer-use-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/computer-use-mcp/index.js"
+      ],
+      "env": {
+        "DISPLAY": ":99",
+        "HOME": "/tmp/computer-use-sandbox"
+      }
+    },
+    "cache-manager-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/cache-manager-mcp/index.js"
+      ]
+    },
+    "mcp-router": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/mcp-router/index.js"
+      ]
+    },
+    "code-execution-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/emirkovacevic/.ai-os/mcp/code-execution-mcp/index.js"
+      ]
     }
+  },
+  "model": {
+    "name": "gemini-3.1-pro"
+  },
+  "interactions_api_schema": "steps",
+  "env": {
+    "AI_OS_CALLER_ROLE": "architect"
   }
 }

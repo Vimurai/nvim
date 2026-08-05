@@ -1,21 +1,18 @@
 ---
 name: gemini_tasks
 description: Update only Gemini section of TASKS.md (G-## tasks)
-disable-model-invocation: false
-user-invocable: false
-allowed-tools: Read, Edit
-context: fork
-agent: general-purpose
 ---
 ROLE: TASK_WRITER
-Target: .ai/TASKS.md (Gemini section only)
+Target: `state.json` (via `task-synchronizer-mcp`)
 
 Rules:
-- Edit ONLY under "## Gemini (Frontend/UX/SEO/Content)"
-- Preserve Claude (C-##) and Cross (X-##) sections unchanged
-- Use G-## sequentially from current highest + 1
-- Each task: Owner/Outcome/Area/Verify/DoneDefinition/NeedsDecision
+- Add G-## tasks using the `add_task` tool from `task-synchronizer-mcp`.
+- When calling `add_task`:
+  - `prefix`: "G" (Gemini task)
+  - `owner`: "Architect (Gemini)"
+  - `tier`: 1, 2, or 3
+  - `description`: The task format must be: `G-##: Outcome | Verify: <concrete check> | NeedsDecision: D-###`
 - Outcome must be measurable. Verify must be a concrete check.
 - Link D-### for any task that requires a frontend/stack decision.
 
-Output: full TASKS.md content with Gemini section updated.
+Output: confirmation that tasks were added to the system state via MCP. Do NOT attempt to manually rewrite `TASKS.md`.
