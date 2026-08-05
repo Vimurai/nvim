@@ -1,3 +1,4 @@
+require("emirtech.core.macros.incremental-selection")
 require("emirtech.core.macros.log")
 require("emirtech.core.macros.smart-docs")
 require("emirtech.core.macros.try-catch")
