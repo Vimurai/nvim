@@ -31,7 +31,7 @@ return {
 
 				-- ✅ Razor: format via LSP on save
 				if ft == "razor" then
-					return { lsp_format = "first", timeout_ms = 5000 }
+					return { lsp_format = "first", timeout_ms = 8000 }
 				end
 
 				-- ✅ For C#: use csharpier (no LSP)

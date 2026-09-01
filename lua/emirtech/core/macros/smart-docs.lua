@@ -1,3 +1,5 @@
+local langs = require("emirtech.core.macros.langs")
+
 vim.api.nvim_create_user_command("SmartDocBlock", function()
 	local esc = vim.api.nvim_replace_termcodes("<Esc>", true, true, true)
 	local ft = vim.bo.filetype
@@ -8,8 +10,8 @@ vim.api.nvim_create_user_command("SmartDocBlock", function()
 	local name, args, returns = nil, nil, false
 	local doc = {}
 
-	-- ===== JS / TS =====
-	if ft:match("javascript") or ft:match("typescript") or ft:match("vue") then
+	-- ===== JS / TS / Vue / React / Svelte =====
+	if langs.is_js_family(ft) then
 		name, args = line:match("function%s+([%w_]+)%s*%((.-)%)")
 		if not name then
 			name, args = line:match("const%s+([%w_]+)%s*=%s*%((.-)%)%s*=>")

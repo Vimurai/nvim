@@ -1,5 +1,8 @@
 require("emirtech.core.macros.incremental-selection")
+require("emirtech.core.macros.langs")
 require("emirtech.core.macros.log")
 require("emirtech.core.macros.smart-docs")
 require("emirtech.core.macros.try-catch")
 require("emirtech.core.macros.wrap-if")
+require("emirtech.core.macros.strip-logs")
+require("emirtech.core.macros.async-wrap")

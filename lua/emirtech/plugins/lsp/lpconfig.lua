@@ -8,7 +8,15 @@ return {
 			"mason-org/mason-lspconfig.nvim", -- IMPORTANT for modern Mason flow
 			"saghen/blink.cmp",
 			{ "antosha417/nvim-lsp-file-operations", config = true },
-			{ "folke/neodev.nvim", opts = {} },
+			{
+				"folke/lazydev.nvim",
+				ft = "lua",
+				opts = {
+					library = {
+						{ path = "${3rd}/luv/library", words = { "vim%.uv" } },
+					},
+				},
+			},
 			"ray-x/lsp_signature.nvim",
 			"b0o/SchemaStore.nvim", -- JSON/YAML schemas for jsonls + yamlls
 		},
@@ -50,12 +58,26 @@ return {
 			-- -------------------------
 			-- Keymaps + safe signature attach (per-buffer)
 			-- -------------------------
+			-- Drop a `.nocopilot` file anywhere at or above a project's root to kill
+			-- Copilot there (blink-copilot completions, inline ghost text, and
+			-- sidekick's NES all read from this one LSP client, so stopping it here
+			-- silences all three).
+			local function has_no_copilot_marker(bufnr)
+				local dir = vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr))
+				return dir ~= "" and #vim.fs.find(".nocopilot", { path = dir, upward = true }) > 0
+			end
+
 			vim.api.nvim_create_autocmd("LspAttach", {
 				desc = "LSP keymaps + safe addons",
 				callback = function(event)
 					local bufnr = event.buf
 					local client = vim.lsp.get_client_by_id(event.data.client_id)
 					if not client then
+						return
+					end
+
+					if client.name == "copilot" and has_no_copilot_marker(bufnr) then
+						client:stop()
 						return
 					end
 

@@ -1,3 +1,7 @@
+-- Session-wide toggle for <leader>ac. Gates both ghost text (inline_completion,
+-- flipped directly below) and NES (nes.enabled reads this on every trigger).
+local copilot_enabled = true
+
 return {
 	"folke/sidekick.nvim",
 	event = "VeryLazy",
@@ -5,7 +9,7 @@ return {
 		picker = "snacks",
 		nes = {
 			enabled = function(buf)
-				return vim.bo[buf].filetype ~= "vue"
+				return copilot_enabled and vim.bo[buf].filetype ~= "vue"
 			end,
 			debounce = 100,
 		},
@@ -95,6 +99,17 @@ return {
 				require("sidekick.cli").toggle()
 			end,
 			desc = "Sidekick AI CLI toggle",
+		},
+		{
+			"<leader>ac",
+			function()
+				copilot_enabled = not copilot_enabled
+				if vim.lsp.inline_completion then
+					vim.lsp.inline_completion.enable(copilot_enabled)
+				end
+				vim.notify("Copilot completions " .. (copilot_enabled and "enabled" or "disabled"), vim.log.levels.INFO)
+			end,
+			desc = "Toggle Copilot completions (ghost text + NES)",
 		},
 		{
 			"<leader>ap",

@@ -1,3 +1,5 @@
+local langs = require("emirtech.core.macros.langs")
+
 vim.keymap.set("v", "<leader>if", function()
 	local esc = vim.api.nvim_replace_termcodes("<Esc>", true, true, true)
 	local start_row = vim.fn.line("v")
@@ -7,6 +9,7 @@ vim.keymap.set("v", "<leader>if", function()
 	end
 
 	local indent = string.rep(" ", vim.fn.indent(start_row))
+	local unit = langs.indent_unit()
 	local ft = vim.bo.filetype
 	local selected_lines = vim.api.nvim_buf_get_lines(0, start_row - 1, end_row, false)
 
@@ -14,19 +17,10 @@ vim.keymap.set("v", "<leader>if", function()
 	local cursor_row, cursor_col = start_row, 0
 
 	-- ===== JS / TS / Vue / React / Svelte =====
-	if
-		vim.tbl_contains({
-			"javascript",
-			"typescript",
-			"javascriptreact",
-			"typescriptreact",
-			"vue",
-			"svelte",
-		}, ft)
-	then
+	if langs.is_js_family(ft) then
 		table.insert(wrapped, indent .. "if () {")
 		for _, line in ipairs(selected_lines) do
-			table.insert(wrapped, indent .. "  " .. line)
+			table.insert(wrapped, indent .. unit .. line)
 		end
 		table.insert(wrapped, indent .. "}")
 		cursor_row = start_row

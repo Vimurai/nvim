@@ -6,8 +6,8 @@
 -- no suggestions at all.
 local has_native_inline = vim.lsp.inline_completion ~= nil
 
-local sources = has_native_inline and { "lsp", "path", "snippets", "buffer" }
-	or { "copilot", "lsp", "path", "snippets", "buffer" }
+local sources = has_native_inline and { "lazydev", "lsp", "path", "snippets", "buffer" }
+	or { "lazydev", "copilot", "lsp", "path", "snippets", "buffer" }
 
 return {
 	"saghen/blink.cmp",
@@ -113,6 +113,13 @@ return {
 					module = "blink-copilot",
 					score_offset = 100, -- Keeps Copilot suggestions high in the list
 					async = true,
+				},
+				-- lazydev supplies `vim.*` API completions in Lua config files;
+				-- outranks lua_ls's own (often wrong) suggestions for those.
+				lazydev = {
+					name = "LazyDev",
+					module = "lazydev.integrations.blink",
+					score_offset = 100,
 				},
 			},
 		},
