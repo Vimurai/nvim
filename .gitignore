@@ -7,3 +7,5 @@ CLAUDE.md
 /.mcp.json
 /lazy-lock.json
 /lazy-lock.json
+/eslint/node_modules
+/eslint/package-lock.json

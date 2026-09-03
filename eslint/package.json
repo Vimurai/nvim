@@ -1,0 +1,15 @@
+{
+  "name": "nvim-eslint-fallback",
+  "private": true,
+  "description": "ESLint + plugins used by Neovim's default flat config for projects without eslint.config.*",
+  "type": "module",
+  "dependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.9.1",
+    "eslint-plugin-vue": "^10.10.0",
+    "globals": "^17.12.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.69.0",
+    "vue-eslint-parser": "^10.4.1"
+  }
+}

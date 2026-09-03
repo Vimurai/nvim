@@ -5,12 +5,11 @@ return {
 		local lint = require("lint")
 
 		lint.linters_by_ft = {
-			-- JavaScript, TypeScript, Vue: ESLint is often handled by LSP, but can be added here too if preferred
-			javascript = { "eslint" },
-			typescript = { "eslint" },
-			javascriptreact = { "eslint" },
-			typescriptreact = { "eslint" },
-			vue = { "eslint" },
+			-- JavaScript, TypeScript, Vue: ESLint diagnostics come from the eslint
+			-- LSP (lsp/lpconfig.lua), which also falls back to a default config when
+			-- the project has none. Running the `eslint` CLI here too only duplicated
+			-- diagnostics, and errored ("ENOENT" / "Could not find config file") in
+			-- projects without an eslint binary or config.
 
 			-- Lua: luacheck (requires `luacheck` to be installed globally or via Mason)
 			lua = { "luacheck" },

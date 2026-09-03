@@ -158,13 +158,70 @@ return {
 			})
 
 			-- ESLint (fixAll on save)
+			--
+			-- Projects without an eslint.config.* (or without ESLint at all) get a
+			-- default flat config + the ESLint bundled under ~/.config/nvim/eslint
+			-- instead of "Could not find config file". See lua/emirtech/util/eslint.lua.
+			local eslint_util = require("emirtech.util.eslint")
+			local eslint_base_before_init = vim.lsp.config.eslint.before_init
+
 			vim.lsp.config("eslint", {
 				capabilities = capabilities,
 				settings = {
-					experimental = { useFlatConfig = true },
 					codeActionOnSave = { enable = true, mode = "all" },
 				},
 				filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
+				-- lspconfig's default root_dir refuses to attach when no ESLint config
+				-- exists; attach to any JS/TS project root instead (deno excluded).
+				root_dir = function(bufnr, on_dir)
+					if vim.fs.root(bufnr, { "deno.json", "deno.jsonc", "deno.lock" }) then
+						return
+					end
+					local markers = {
+						{ "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb", "bun.lock" },
+						{ "package.json" },
+						{ ".git" },
+					}
+					local root = vim.fs.root(bufnr, markers) or vim.fn.getcwd()
+					-- Remember whether this buffer sees a real ESLint config so
+					-- before_init (root only) can decide on the fallback.
+					local name = vim.api.nvim_buf_get_name(bufnr)
+					local kind = eslint_util.find_config(name ~= "" and vim.fs.dirname(name) or root, root)
+					if kind then
+						eslint_util.kind_by_root[root] = kind
+					end
+					on_dir(root)
+				end,
+				before_init = function(params, config)
+					if eslint_base_before_init then
+						eslint_base_before_init(params, config) -- workspaceFolder + yarn PnP
+					end
+					local root = config.root_dir
+					if not root then
+						return
+					end
+					config.settings = config.settings or {}
+					local settings = config.settings
+
+					-- No ESLint in the project: resolve the bundled one.
+					if not eslint_util.has_project_eslint(root) and eslint_util.fallback_installed() then
+						settings.nodePath = eslint_util.node_path
+					end
+
+					-- Note: never set experimental.useFlatConfig = true. That makes the
+					-- server load the removed FlatESLint class and fail silently on
+					-- ESLint >= 9, which auto-detects flat config anyway.
+					local kind = eslint_util.kind_by_root[root] or eslint_util.find_config(root, root)
+					if kind == "flat" then
+						return
+					elseif kind == "legacy" and (eslint_util.project_eslint_major(root) or 10) < 10 then
+						-- ESLint 8/9 can still read .eslintrc when told to.
+						settings.useFlatConfig = false
+					elseif eslint_util.fallback_installed() then
+						settings.options = settings.options or {}
+						settings.options.overrideConfigFile = eslint_util.fallback_config(root)
+					end
+				end,
 				on_attach = function(client, bufnr)
 					if not client.server_capabilities.codeActionProvider then
 						return
